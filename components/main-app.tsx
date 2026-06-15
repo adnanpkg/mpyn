@@ -2,12 +2,34 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import { getProfile, getCreatorProfile, needsCreatorSetup } from '@/lib/profile';
 
 export default function MainApp() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace('/home');
+    const route = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.replace('/');
+        return;
+      }
+
+      const profile = await getProfile(user.id);
+      if (!profile) {
+        router.replace('/');
+        return;
+      }
+
+      if (needsCreatorSetup(profile, await getCreatorProfile(user.id))) {
+        router.replace('/profile/setup');
+        return;
+      }
+
+      router.replace('/home');
+    };
+    route();
   }, [router]);
 
   return (
