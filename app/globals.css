@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  background: #000000;
+  overflow-x: hidden;
+}
+
+body {
+  background: #000000;
+  color: #FFFFFF;
+  font-family: var(--font-inter), sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  min-height: 100dvh;
+}
+
+input, textarea, select {
+  font-family: inherit;
+}
+
+::selection {
+  background: rgba(255, 255, 255, 0.15);
+  color: #FFFFFF;
+}
+
+@layer components {
+  .skeleton {
+    background: linear-gradient(90deg, #1A1A1A 25%, #2A2A2A 50%, #1A1A1A 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite linear;
+    border-radius: 8px;
+  }
+
+  .pill-btn {
+    @apply rounded-pill px-6 py-3 font-heading font-bold text-sm transition-all active:scale-[0.96];
+  }
+
+  .pill-btn-primary {
+    @apply pill-btn bg-text text-bg;
+  }
+
+  .pill-btn-outline {
+    @apply pill-btn bg-transparent border border-border text-text;
+  }
+
+  .app-container {
+    @apply mx-auto max-w-app w-full min-h-screen relative;
+  }
+
+  .search-input {
+    @apply w-full bg-elevated rounded-input px-4 py-3 text-text text-sm outline-none border border-border focus:border-muted transition-colors;
+  }
+
+  .list-item {
+    @apply w-full px-4 py-3 rounded-pill bg-surface border border-border text-text text-sm font-body transition-all active:scale-[0.96] text-left;
+  }
+
+  .list-item-selected {
+    @apply list-item bg-text text-bg border-text;
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.otp-input {
+  width: 48px;
+  height: 56px;
+  text-align: center;
+  font-size: 24px;
+  font-family: var(--font-dm-mono), monospace;
+  background: #1A1A1A;
+  border: 1px solid #2A2A2A;
+  border-radius: 14px;
+  color: #FFFFFF;
+  outline: none;
+  caret-color: #FFFFFF;
+}
+
+.otp-input:focus {
+  border-color: #888888;
+}
+
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type=number] {
+  -moz-appearance: textfield;
+}
