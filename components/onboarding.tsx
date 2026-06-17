@@ -6,6 +6,7 @@ import { Search, ArrowLeft } from 'lucide-react';
 import { indianStates } from '@/lib/indian-data';
 import { haptic, spring, pressScale } from '@/lib/haptics';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { getProfile } from '@/lib/profile';
 
 interface OnboardingProps {
   onComplete: () => void;
@@ -64,11 +65,13 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   useEffect(() => {
     const resumeSignupFromMagicLink = async () => {
       if (typeof window === 'undefined') return;
-      const intent = window.localStorage.getItem(AUTH_INTENT_KEY);
-      if (intent !== 'signup') return;
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+
+      // Resume signup setup whenever a signed-in user has draft data but no DB profile yet.
+      const profile = await getProfile(user.id);
+      if (profile) return;
 
       const rawDraft = window.localStorage.getItem(SIGNUP_DRAFT_KEY);
       if (!rawDraft) return;

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import type { EmailOtpType } from '@supabase/supabase-js';
+import { getProfile } from '@/lib/profile';
 
 const SplashScreen = dynamic(() => import('@/components/splash-screen'), {
   ssr: false,
@@ -22,6 +23,18 @@ export default function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const syncPhaseForSignedInUser = async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      const user = userData.user;
+      if (!user) {
+        setPhase('onboarding');
+        return;
+      }
+
+      const profile = await getProfile(user.id);
+      setPhase(profile ? 'app' : 'onboarding');
+    };
+
     const checkSession = async () => {
       if (!isSupabaseConfigured) {
         setLoading(false);
@@ -54,8 +67,7 @@ export default function App() {
 
       const { data } = await supabase.auth.getSession();
       if (data.session) {
-        const intent = queryIntent ?? window.localStorage.getItem('auth_intent');
-        setPhase(intent === 'signup' ? 'onboarding' : 'app');
+        await syncPhaseForSignedInUser();
       }
       setLoading(false);
     };
@@ -67,8 +79,7 @@ export default function App() {
 
     const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_IN') {
-        const intent = typeof window !== 'undefined' ? window.localStorage.getItem('auth_intent') : null;
-        setPhase(intent === 'signup' ? 'onboarding' : 'app');
+        void syncPhaseForSignedInUser();
       }
     });
 
