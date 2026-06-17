@@ -1,12 +1,11 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, ArrowLeft } from 'lucide-react';
 import { indianStates } from '@/lib/indian-data';
 import { haptic, spring, pressScale } from '@/lib/haptics';
-import { supabase } from '@/lib/supabase';
-import OtpInput from '@/components/otp-input';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 interface OnboardingProps {
   onComplete: () => void;
@@ -15,6 +14,8 @@ interface OnboardingProps {
 type AuthMode = 'welcome' | 'signup' | 'signin';
 type SignupStep = 1 | 2 | 3 | 4 | 5 | 6;
 type SigninStep = 1 | 2;
+const AUTH_INTENT_KEY = 'auth_intent';
+const SIGNUP_DRAFT_KEY = 'signup_draft';
 
 const slideVariants = {
   enter: (dir: number) => ({ x: dir > 0 ? 300 : -300, opacity: 0 }),
@@ -31,7 +32,6 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   const [selectedCity, setSelectedCity] = useState('');
   const [role, setRole] = useState<'creator' | 'business' | ''>('');
   const [email, setEmail] = useState('');
-  const [otp, setOtp] = useState('');
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -59,8 +59,41 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       return;
     }
     setSigninStep(1);
-    setOtp('');
   }, [signinStep]);
+
+  useEffect(() => {
+    const resumeSignupFromMagicLink = async () => {
+      if (typeof window === 'undefined') return;
+      const intent = window.localStorage.getItem(AUTH_INTENT_KEY);
+      if (intent !== 'signup') return;
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const rawDraft = window.localStorage.getItem(SIGNUP_DRAFT_KEY);
+      if (!rawDraft) return;
+
+      try {
+        const draft = JSON.parse(rawDraft) as {
+          state?: string;
+          city?: string;
+          role?: 'creator' | 'business';
+          email?: string;
+        };
+        if (draft.state) setSelectedState(draft.state);
+        if (draft.city) setSelectedCity(draft.city);
+        if (draft.role) setRole(draft.role);
+        if (draft.email) setEmail(draft.email);
+      } catch {
+        // Ignore malformed local draft and let user continue manually.
+      }
+
+      setMode('signup');
+      setSignupStep(6);
+    };
+
+    resumeSignupFromMagicLink();
+  }, []);
 
   const filteredStates = indianStates.filter((s) =>
     s.name.toLowerCase().includes(stateSearch.toLowerCase())
@@ -71,49 +104,47 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
     c.toLowerCase().includes(citySearch.toLowerCase())
   );
 
-  const sendOtp = async (isSignup: boolean) => {
+  const sendMagicLink = async (isSignup: boolean) => {
     if (!email) return;
+    if (!isSupabaseConfigured) {
+      setError('Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local.');
+      haptic.error();
+      return;
+    }
     setLoading(true);
     setError('');
     try {
-      const { error: otpError } = await supabase.auth.signInWithOtp({
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(AUTH_INTENT_KEY, isSignup ? 'signup' : 'signin');
+        if (isSignup) {
+          window.localStorage.setItem(
+            SIGNUP_DRAFT_KEY,
+            JSON.stringify({
+              state: selectedState,
+              city: selectedCity,
+              role,
+              email,
+            })
+          );
+        }
+      }
+
+      const { error: signInError } = await supabase.auth.signInWithOtp({
         email,
-        options: { shouldCreateUser: isSignup },
+        options: {
+          shouldCreateUser: isSignup,
+          emailRedirectTo:
+            typeof window !== 'undefined'
+              ? `${window.location.origin}/?auth_intent=${isSignup ? 'signup' : 'signin'}`
+              : undefined,
+        },
       });
-      if (otpError) throw otpError;
+      if (signInError) throw signInError;
       haptic.success();
       if (isSignup) goSignupNext();
       else setSigninStep(2);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to send code');
-      haptic.error();
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const verifyOtp = async (isSignup: boolean) => {
-    if (!email || otp.length < 6) return;
-    setLoading(true);
-    setError('');
-    try {
-      const { data, error: verifyError } = await supabase.auth.verifyOtp({
-        email,
-        token: otp,
-        type: 'email',
-      });
-      if (verifyError) throw verifyError;
-      if (!data.user) throw new Error('Verification failed');
-
-      if (isSignup) {
-        haptic.success();
-        goSignupNext();
-      } else {
-        haptic.success();
-        onComplete();
-      }
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Invalid code');
+      setError(e instanceof Error ? e.message : 'Failed to send magic link');
       haptic.error();
     } finally {
       setLoading(false);
@@ -137,6 +168,11 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
         email,
       });
       if (profileError) throw profileError;
+
+      if (typeof window !== 'undefined') {
+        window.localStorage.removeItem(AUTH_INTENT_KEY);
+        window.localStorage.removeItem(SIGNUP_DRAFT_KEY);
+      }
 
       haptic.success();
       onComplete();
@@ -215,39 +251,33 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                 <motion.button
                   className="pill-btn-primary w-full disabled:opacity-40"
                   disabled={!email || loading}
-                  onClick={() => sendOtp(false)}
+                  onClick={() => sendMagicLink(false)}
                   {...pressScale}
                 >
-                  {loading ? 'sending...' : 'send code'}
+                  {loading ? 'sending...' : 'send magic link'}
                 </motion.button>
               </div>
             </StepWrapper>
           )}
 
           {mode === 'signin' && signinStep === 2 && (
-            <StepWrapper key="signin-otp" custom={direction}>
+            <StepWrapper key="signin-link" custom={direction}>
               <h1 className="font-heading font-bold text-3xl text-text mb-2 px-6 pt-16">
                 check your email.
               </h1>
               <p className="text-muted text-sm font-body mb-8 px-6">
-                we sent a 6-digit code to {email}
+                we sent a magic link to {email}
               </p>
               <div className="px-6 space-y-6">
-                <OtpInput value={otp} onChange={setOtp} />
+                <p className="text-dim text-sm font-body text-center">
+                  tap the link in your inbox to sign in.
+                </p>
                 {error && <p className="text-red-400 text-sm font-body text-center">{error}</p>}
-                <motion.button
-                  className="pill-btn-primary w-full disabled:opacity-40"
-                  disabled={otp.length < 6 || loading}
-                  onClick={() => verifyOtp(false)}
-                  {...pressScale}
-                >
-                  {loading ? 'verifying...' : 'verify & sign in'}
-                </motion.button>
                 <button
                   className="text-dim text-sm font-body w-full text-center"
-                  onClick={() => { setOtp(''); sendOtp(false); }}
+                  onClick={() => sendMagicLink(false)}
                 >
-                  resend code
+                  resend magic link
                 </button>
               </div>
             </StepWrapper>
@@ -366,7 +396,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                 your email.
               </h1>
               <p className="text-muted text-sm font-body mb-8 px-6">
-                we&apos;ll send you a verification code
+                we&apos;ll send you a magic link
               </p>
               <div className="px-6 space-y-5">
                 <input
@@ -380,39 +410,33 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                 <motion.button
                   className="pill-btn-primary w-full disabled:opacity-40"
                   disabled={!email || loading}
-                  onClick={() => sendOtp(true)}
+                  onClick={() => sendMagicLink(true)}
                   {...pressScale}
                 >
-                  {loading ? 'sending...' : 'send code'}
+                  {loading ? 'sending...' : 'send magic link'}
                 </motion.button>
               </div>
             </StepWrapper>
           )}
 
           {mode === 'signup' && signupStep === 5 && (
-            <StepWrapper key="s5-otp" custom={direction}>
+            <StepWrapper key="s5-link" custom={direction}>
               <h1 className="font-heading font-bold text-3xl text-text mb-2 px-6 pt-16">
                 check your email.
               </h1>
               <p className="text-muted text-sm font-body mb-8 px-6">
-                we sent a 6-digit code to {email}
+                we sent a magic link to {email}
               </p>
               <div className="px-6 space-y-6">
-                <OtpInput value={otp} onChange={setOtp} />
+                <p className="text-dim text-sm font-body text-center">
+                  open the link in your inbox, then continue setup here.
+                </p>
                 {error && <p className="text-red-400 text-sm font-body text-center">{error}</p>}
-                <motion.button
-                  className="pill-btn-primary w-full disabled:opacity-40"
-                  disabled={otp.length < 6 || loading}
-                  onClick={() => verifyOtp(true)}
-                  {...pressScale}
-                >
-                  {loading ? 'verifying...' : 'verify email'}
-                </motion.button>
                 <button
                   className="text-dim text-sm font-body w-full text-center"
-                  onClick={() => { setOtp(''); sendOtp(true); }}
+                  onClick={() => sendMagicLink(true)}
                 >
-                  resend code
+                  resend magic link
                 </button>
               </div>
             </StepWrapper>
