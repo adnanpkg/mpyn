@@ -62,11 +62,17 @@ export default function CreatorProfileForm({
         updated_at: new Date().toISOString(),
       });
 
-      if (saveError) throw saveError;
+      if (saveError) {
+        // `saveError` is not always an instance of `Error`, so surface its real message.
+        throw new Error(saveError.message || 'Failed to save profile');
+      }
       haptic.success();
       onSave();
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Failed to save profile';
+      // Helps debugging RLS/schema issues from the UI.
+      // eslint-disable-next-line no-console
+      console.error('[creator-profile-form] save failed:', e);
       setError(message);
       haptic.error();
     } finally {
