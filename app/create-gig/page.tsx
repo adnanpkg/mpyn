@@ -6,6 +6,7 @@ import { ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { haptic, pressScale } from '@/lib/haptics';
+import { getProfile } from '@/lib/profile';
 
 export default function CreateGigPage() {
   const router = useRouter();
@@ -26,6 +27,11 @@ export default function CreateGigPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
+      const profile = await getProfile(user.id);
+      if (!profile) {
+        throw new Error('Complete signup/profile first, then create a gig.');
+      }
+
       const { error: insertError } = await supabase.from('gigs').insert({
         creator_id: user.id,
         title: title.trim(),
@@ -33,10 +39,14 @@ export default function CreateGigPage() {
         charge: chargeNum,
       });
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        throw new Error(insertError.message || 'Failed to create gig');
+      }
       haptic.success();
       router.replace('/gigs');
     } catch (e: unknown) {
+      // eslint-disable-next-line no-console
+      console.error('[create-gig] create failed:', e);
       setError(e instanceof Error ? e.message : 'Failed to create gig');
       haptic.error();
     } finally {

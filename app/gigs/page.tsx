@@ -17,6 +17,7 @@ export default function GigsPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [gigs, setGigs] = useState<Gig[]>([]);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const load = async () => {
@@ -26,11 +27,18 @@ export default function GigsPage() {
         return;
       }
 
-      const { data } = await supabase
+      const { data, error: loadError } = await supabase
         .from('gigs')
         .select('id, title, description, charge, status')
         .eq('creator_id', user.id)
         .order('created_at', { ascending: false });
+
+      if (loadError) {
+        setError(loadError.message || 'Failed to load gigs');
+        setGigs([]);
+        setLoading(false);
+        return;
+      }
 
       setGigs(data ?? []);
       setLoading(false);
@@ -52,6 +60,9 @@ export default function GigsPage() {
         <h1 className="font-heading font-bold text-2xl text-text">Gigs</h1>
       </header>
       <main className="px-6">
+        {error && (
+          <p className="text-red-400 text-sm font-body mb-4">{error}</p>
+        )}
         {gigs.length === 0 ? (
           <div className="flex flex-col items-center py-16 text-center">
             <p className="text-muted text-sm font-body">no gigs yet</p>
