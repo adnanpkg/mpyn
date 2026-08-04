@@ -57,7 +57,7 @@ export default function HomePage() {
 
       <main className="px-6">
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <span className="text-4xl mb-4">✳</span>
+          <div className="w-16 h-16 mb-4 bg-red-500 rounded" />
           <p className="font-heading font-bold text-lg text-text mb-2">your feed is empty</p>
           <p className="text-muted text-sm font-body max-w-[240px]">
             gigs and opportunities will show up here

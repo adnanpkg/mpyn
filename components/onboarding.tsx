@@ -210,7 +210,9 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
           {mode === 'welcome' && (
             <StepWrapper key="welcome" custom={direction}>
               <div className="flex flex-col items-center justify-center min-h-screen px-6">
-                <span className="text-6xl mb-6">✳</span>
+                <span className="text-6xl mb-6">
+            <img src="/icon.svg" alt="Icon" className="w-16 h-16" />
+          </span>
                 <h1 className="font-heading font-bold text-4xl text-text mb-2">multiply.</h1>
                 <p className="text-muted text-sm font-body mb-12 text-center">
                   connect creators with brands
