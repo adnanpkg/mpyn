@@ -17,10 +17,27 @@ export default function CreateGigPage() {
   const [error, setError] = useState('');
 
   const chargeNum = parseInt(charge, 10);
-  const isValid = title.trim() && chargeNum >= 100;
+  const isValid = title.trim() && chargeNum >= 500;
+
+  // Platform cut formula from context.md for standard user:
+  // ₹500–₹2,000 -> ₹19 cut, ₹2,001–₹10,000 -> ₹35 cut, ₹10,001+ -> ₹50 cut
+  const getPlatformCut = (amount: number) => {
+    if (isNaN(amount) || amount < 500) return 0;
+    if (amount <= 2000) return 19;
+    if (amount <= 10000) return 35;
+    return 50;
+  };
+
+  const platformCut = getPlatformCut(chargeNum);
+  const earnings = chargeNum > 0 ? chargeNum - platformCut : 0;
 
   const handleCreate = async () => {
-    if (!isValid) return;
+    if (!isValid) {
+      if (chargeNum < 500) {
+        setError('minimum gig is ₹500 bro');
+      }
+      return;
+    }
     setLoading(true);
     setError('');
     try {
@@ -36,7 +53,9 @@ export default function CreateGigPage() {
         creator_id: user.id,
         title: title.trim(),
         description: description.trim() || null,
-        charge: chargeNum,
+        price: chargeNum,
+        cut: platformCut,
+        status: 'agreed',
       });
 
       if (insertError) {
@@ -90,19 +109,39 @@ export default function CreateGigPage() {
         </div>
 
         <div>
-          <label className="text-muted text-xs font-mono mb-2 block">charge (min ₹100)</label>
+          <label className="text-muted text-xs font-mono mb-2 block">charge (min ₹500)</label>
           <div className="relative">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted text-sm">₹</span>
             <input
               className="search-input pl-8"
               type="number"
-              min={100}
+              min={500}
               placeholder="500"
               value={charge}
               onChange={(e) => setCharge(e.target.value)}
             />
           </div>
+          {chargeNum > 0 && chargeNum < 500 && (
+            <p className="text-red-400 text-xs font-mono mt-1">minimum gig is ₹500 bro</p>
+          )}
         </div>
+
+        {chargeNum >= 500 && (
+          <div className="p-4 rounded-card bg-surface border border-border space-y-2">
+            <div className="flex justify-between text-xs font-mono text-muted">
+              <span>gig price</span>
+              <span className="text-text">₹{chargeNum}</span>
+            </div>
+            <div className="flex justify-between text-xs font-mono text-muted">
+              <span>multiply. cut</span>
+              <span className="text-text">-₹{platformCut}</span>
+            </div>
+            <div className="pt-2 border-t border-border flex justify-between text-sm font-mono font-bold text-text">
+              <span>you receive</span>
+              <span>₹{earnings}</span>
+            </div>
+          </div>
+        )}
 
         {error && <p className="text-red-400 text-sm font-body">{error}</p>}
 
@@ -112,9 +151,10 @@ export default function CreateGigPage() {
           onClick={handleCreate}
           {...pressScale}
         >
-          {loading ? 'creating...' : 'create gig'}
+          {loading ? 'creating...' : 'confirm gig.'}
         </motion.button>
       </main>
     </div>
   );
+
 }
