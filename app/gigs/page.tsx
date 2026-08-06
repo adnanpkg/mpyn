@@ -56,35 +56,26 @@ export default function GigsPage() {
 
   const handleMarkComplete = async (gig: Gig) => {
     haptic.heavy();
+    setError('');
     try {
-      const isCreator = true; // Default fallback to user state
-      const updatePayload: Partial<Gig> = isCreator
-        ? { creator_marked_complete: true }
-        : { business_marked_complete: true };
-
-      const bothComplete =
-        (isCreator && gig.business_marked_complete) || (!isCreator && gig.creator_marked_complete);
-
-      if (bothComplete) {
-        updatePayload.status = 'completed';
-      } else {
-        updatePayload.status = 'pending_completion';
-      }
-
+      // 1. Try updating status to 'completed'
       const { error: updateErr } = await supabase
         .from('gigs')
-        .update(updatePayload)
+        .update({ status: 'completed' })
         .eq('id', gig.id);
 
-      if (updateErr) throw updateErr;
+      if (updateErr) {
+        throw updateErr;
+      }
 
       setGigs((prev) =>
-        prev.map((g) => (g.id === gig.id ? { ...g, ...updatePayload } : g))
+        prev.map((g) => (g.id === gig.id ? { ...g, status: 'completed', creator_marked_complete: true } : g))
       );
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to update gig status');
     }
   };
+
 
   if (loading) {
     return (
