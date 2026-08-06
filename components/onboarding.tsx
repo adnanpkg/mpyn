@@ -289,12 +289,16 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
           {mode === 'signin' && signinStep === 2 && (
             <StepWrapper key="signin-link" custom={direction}>
               <h1 className="font-heading font-bold text-3xl text-text mb-2 px-6 pt-16">
-                enter 6-digit OTP.
+                check your email.
               </h1>
               <p className="text-muted text-sm font-body mb-8 px-6">
-                we sent a verification code to {email}
+                we sent a sign-in link to {email}
               </p>
               <div className="px-6 space-y-6">
+                <p className="text-dim text-xs font-body text-center">
+                  tap the link sent to your inbox to sign in, or enter 6-digit OTP if displayed:
+                </p>
+
                 <OtpInput value={otp} onChange={setOtp} />
 
                 {error && <p className="text-red-400 text-sm font-body text-center">{error}</p>}
@@ -305,18 +309,19 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                   onClick={() => verifyOtpCode(false)}
                   {...pressScale}
                 >
-                  {loading ? 'verifying...' : 'verify & sign in'}
+                  {loading ? 'verifying...' : 'verify OTP code'}
                 </motion.button>
 
                 <button
                   className="text-dim text-sm font-body w-full text-center"
                   onClick={() => sendOtpCode(false)}
                 >
-                  resend code
+                  resend email
                 </button>
               </div>
             </StepWrapper>
           )}
+
 
           {mode === 'signup' && signupStep === 1 && (
             <StepWrapper key="s1" custom={direction}>
