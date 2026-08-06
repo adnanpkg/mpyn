@@ -10,6 +10,9 @@ export interface Profile {
   phone: string | null;
 }
 
+export type UserProfile = Profile;
+
+
 export interface CreatorProfile {
   id: string;
   instagram_handle: string | null;

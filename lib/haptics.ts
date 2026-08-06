@@ -47,7 +47,9 @@ export const haptic = {
   tap: () => vibrate(8),
   success: () => vibrate([10, 50, 10]),
   error: () => vibrate([30, 20, 30]),
+  heavy: () => vibrate([20, 30, 20, 30, 20]),
 };
+
 
 export const spring = {
   default: { type: 'spring' as const, stiffness: 400, damping: 30 },
