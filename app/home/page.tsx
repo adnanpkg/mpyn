@@ -69,10 +69,11 @@ export default function HomePage() {
           .eq('role', targetRole)
           .ilike('city', profile.city);
 
-        // 2. Fetch all active gigs and creator profiles
+        // 2. Fetch gigs NOT created by current user
         const { data: gigsData } = await supabase
           .from('gigs')
           .select('*')
+          .neq('creator_id', user.id)
           .order('created_at', { ascending: false });
 
         let gigItems: FeedItem[] = [];
@@ -87,21 +88,23 @@ export default function HomePage() {
 
           gigItems = gigsData
             .map((g): FeedItem | null => {
-              const creator = creatorMap.get(g.creator_id);
-              if (!creator || creator.city.toLowerCase() !== profile.city.toLowerCase()) return null;
+              const poster = creatorMap.get(g.creator_id);
+              if (!poster) return null;
+              // Only show gigs from opposite role & same city
+              if (poster.role === profile.role) return null;
+              if (poster.city.toLowerCase() !== profile.city.toLowerCase()) return null;
               return {
                 id: g.id,
-                username: creator.username || 'User',
-                role: creator.role,
-                city: creator.city,
-                state: creator.state,
-                is_pro: creator.is_pro,
+                username: poster.username || 'User',
+                role: poster.role,
+                city: poster.city,
+                state: poster.state,
+                is_pro: poster.is_pro,
                 charge: g.price || g.charge,
                 bio: `${g.title} - ${g.description || ''}`,
               };
             })
             .filter((item): item is FeedItem => item !== null);
-
         }
 
         const combinedFeed = [...gigItems, ...((profiles as FeedItem[]) || [])];
