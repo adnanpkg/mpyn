@@ -39,7 +39,7 @@ export default function GigsPage() {
       const { data, error: loadError } = await supabase
         .from('gigs')
         .select('*')
-        .or(`creator_id.eq.${user.id},business_id.eq.${user.id}`)
+        .eq('creator_id', user.id)
         .order('created_at', { ascending: false });
 
       if (loadError) {
@@ -48,6 +48,7 @@ export default function GigsPage() {
       } else {
         setGigs(data ?? []);
       }
+
       setLoading(false);
     };
     load();

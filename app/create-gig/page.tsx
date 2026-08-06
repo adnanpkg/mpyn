@@ -53,10 +53,10 @@ export default function CreateGigPage() {
         creator_id: user.id,
         title: title.trim(),
         description: description.trim() || null,
-        price: chargeNum,
-        cut: platformCut,
-        status: 'agreed',
+        charge: chargeNum,
+        status: 'open',
       });
+
 
       if (insertError) {
         throw new Error(insertError.message || 'Failed to create gig');
