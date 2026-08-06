@@ -62,33 +62,50 @@ export default function HomePage() {
         setFetchingFeed(true);
         const targetRole = profile.role === 'creator' ? 'business' : 'creator';
         
-        // 1. Fetch matching profiles in city
+        // 1. Fetch matching profiles in same city (case-insensitive)
         const { data: profiles } = await supabase
           .from('profiles')
           .select('*')
           .eq('role', targetRole)
-          .eq('city', profile.city);
+          .ilike('city', profile.city);
 
-        // 2. Fetch active gigs posted in the same city
+        // 2. Fetch all active gigs and creator profiles
         const { data: gigsData } = await supabase
           .from('gigs')
-          .select('*, profiles!gigs_creator_id_fkey(username, city, state, role, is_pro)')
+          .select('*')
           .order('created_at', { ascending: false });
 
-        const gigItems: FeedItem[] = (gigsData || [])
-          .filter((g) => g.profiles && g.profiles.city === profile.city)
-          .map((g) => ({
-            id: g.id,
-            username: g.profiles.username || 'Business/Creator',
-            role: g.profiles.role,
-            city: g.profiles.city,
-            state: g.profiles.state,
-            is_pro: g.profiles.is_pro,
-            charge: g.price || g.charge,
-            bio: `${g.title} - ${g.description || ''}`,
-          }));
+        let gigItems: FeedItem[] = [];
+        if (gigsData && gigsData.length > 0) {
+          const creatorIds = Array.from(new Set(gigsData.map((g) => g.creator_id).filter(Boolean)));
+          const { data: gigCreators } = await supabase
+            .from('profiles')
+            .select('*')
+            .in('id', creatorIds);
+
+          const creatorMap = new Map((gigCreators || []).map((c) => [c.id, c]));
+
+          gigItems = gigsData
+            .map((g): FeedItem | null => {
+              const creator = creatorMap.get(g.creator_id);
+              if (!creator || creator.city.toLowerCase() !== profile.city.toLowerCase()) return null;
+              return {
+                id: g.id,
+                username: creator.username || 'User',
+                role: creator.role,
+                city: creator.city,
+                state: creator.state,
+                is_pro: creator.is_pro,
+                charge: g.price || g.charge,
+                bio: `${g.title} - ${g.description || ''}`,
+              };
+            })
+            .filter((item): item is FeedItem => item !== null);
+
+        }
 
         const combinedFeed = [...gigItems, ...((profiles as FeedItem[]) || [])];
+
 
         // Sort items by ranking algorithm: Pro users first, then orders_count desc, then rating desc
         const sorted = combinedFeed.sort((a, b) => {
