@@ -57,38 +57,57 @@ export default function HomePage() {
       setUserProfile(profile);
       setLoading(false);
 
-      // Fetch hyperlocal feed (same city scoping, ranked by Pro status & orders)
+      // Fetch hyperlocal feed: Gigs posted in user's city + Profiles matching city
       try {
         setFetchingFeed(true);
         const targetRole = profile.role === 'creator' ? 'business' : 'creator';
         
-        // Fetch profiles matching user's city
+        // 1. Fetch matching profiles in city
         const { data: profiles } = await supabase
           .from('profiles')
           .select('*')
           .eq('role', targetRole)
           .eq('city', profile.city);
 
-        if (profiles && profiles.length > 0) {
-          // Sort items by ranking algorithm: Pro users first, then orders_count desc, then rating desc
-          const sorted = (profiles as FeedItem[]).sort((a, b) => {
-            if (a.is_pro && !b.is_pro) return -1;
-            if (!a.is_pro && b.is_pro) return 1;
-            const ordersA = a.orders_count || 0;
-            const ordersB = b.orders_count || 0;
-            if (ordersA !== ordersB) return ordersB - ordersA;
-            return (b.rating || 0) - (a.rating || 0);
-          });
-          setFeedItems(sorted);
-        } else {
-          setFeedItems([]);
-        }
+        // 2. Fetch active gigs posted in the same city
+        const { data: gigsData } = await supabase
+          .from('gigs')
+          .select('*, profiles!gigs_creator_id_fkey(username, city, state, role, is_pro)')
+          .order('created_at', { ascending: false });
+
+        const gigItems: FeedItem[] = (gigsData || [])
+          .filter((g) => g.profiles && g.profiles.city === profile.city)
+          .map((g) => ({
+            id: g.id,
+            username: g.profiles.username || 'Business/Creator',
+            role: g.profiles.role,
+            city: g.profiles.city,
+            state: g.profiles.state,
+            is_pro: g.profiles.is_pro,
+            charge: g.price || g.charge,
+            bio: `${g.title} - ${g.description || ''}`,
+          }));
+
+        const combinedFeed = [...gigItems, ...((profiles as FeedItem[]) || [])];
+
+        // Sort items by ranking algorithm: Pro users first, then orders_count desc, then rating desc
+        const sorted = combinedFeed.sort((a, b) => {
+          if (a.is_pro && !b.is_pro) return -1;
+          if (!a.is_pro && b.is_pro) return 1;
+          const ordersA = a.orders_count || 0;
+          const ordersB = b.orders_count || 0;
+          if (ordersA !== ordersB) return ordersB - ordersA;
+          return (b.rating || 0) - (a.rating || 0);
+        });
+
+        setFeedItems(sorted);
       } catch (e) {
         // eslint-disable-next-line no-console
         console.error('Failed to load feed:', e);
       } finally {
         setFetchingFeed(false);
       }
+
     };
 
     checkAndFetchFeed();
