@@ -22,9 +22,12 @@ export default function MainApp() {
         return;
       }
 
-      if (needsCreatorSetup(profile, await getCreatorProfile(user.id))) {
-        router.replace('/profile/setup');
-        return;
+      if (profile.role === 'creator') {
+        const creatorProfile = await getCreatorProfile(user.id);
+        if (needsCreatorSetup(profile, creatorProfile)) {
+          router.replace('/profile/setup');
+          return;
+        }
       }
 
       router.replace('/home');

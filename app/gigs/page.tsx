@@ -15,7 +15,7 @@ interface Gig {
   price?: number;
   charge?: number;
   cut?: number;
-  status: 'agreed' | 'in_progress' | 'pending_completion' | 'completed' | 'disputed';
+  status: 'open' | 'agreed' | 'in_progress' | 'pending_completion' | 'completed' | 'disputed';
   creator_marked_complete?: boolean;
   business_marked_complete?: boolean;
 }
@@ -39,7 +39,7 @@ export default function GigsPage() {
       const { data, error: loadError } = await supabase
         .from('gigs')
         .select('*')
-        .eq('creator_id', user.id)
+        .or(`creator_id.eq.${user.id},business_id.eq.${user.id}`)
         .order('created_at', { ascending: false });
 
       if (loadError) {

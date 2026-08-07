@@ -41,7 +41,7 @@ export default function CreatorProfileForm({
   };
 
   const charge = parseInt(gigCharge, 10);
-  const isValid = instagram.trim() && bio.trim() && categories.length > 0 && charge >= 100;
+  const isValid = instagram.trim() && bio.trim() && categories.length > 0 && charge >= 500;
 
   const handleSave = async () => {
     if (!isValid) return;
@@ -129,20 +129,20 @@ export default function CreatorProfileForm({
       </div>
 
       <div>
-        <label className="text-muted text-xs font-mono mb-2 block">gig charge (min ₹100)</label>
+        <label className="text-muted text-xs font-mono mb-2 block">gig charge (min ₹500)</label>
         <div className="relative">
           <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted text-sm">₹</span>
           <input
             className="search-input pl-8"
             type="number"
-            min={100}
+            min={500}
             placeholder="500"
             value={gigCharge}
             onChange={(e) => setGigCharge(e.target.value)}
           />
         </div>
-        {gigCharge && charge < 100 && (
-          <p className="text-red-400 text-xs mt-1">Minimum charge is ₹100</p>
+        {gigCharge && charge < 500 && (
+          <p className="text-red-400 text-xs mt-1">Minimum charge is ₹500</p>
         )}
       </div>
 

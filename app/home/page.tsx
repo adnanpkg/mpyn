@@ -48,10 +48,12 @@ export default function HomePage() {
         return;
       }
 
-      const creatorProfile = await getCreatorProfile(user.id);
-      if (needsCreatorSetup(profile, creatorProfile)) {
-        router.replace('/profile/setup');
-        return;
+      if (profile.role === 'creator') {
+        const creatorProfile = await getCreatorProfile(user.id);
+        if (needsCreatorSetup(profile, creatorProfile)) {
+          router.replace('/profile/setup');
+          return;
+        }
       }
 
       setUserProfile(profile);

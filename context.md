@@ -82,11 +82,7 @@ navigator.vibrate?.([20,30,20,30,20]) // gig completed (heavy)
 ```
 
 ### Layout
-- Mobile first — designed for 375-430px wide screens
-- Max width 480px centered on desktop, black side margins
-- No horizontal scroll anywhere
-- Bottom tab bar: fixed, backdrop blur, safe area padding
-- Top: env(safe-area-inset-top) aware
+- the current layout seems to be working fine on mobiles but we need to adjust it it for bigger screens
 
 ### Skeleton Loaders
 - Every single data fetch shows skeleton loaders
