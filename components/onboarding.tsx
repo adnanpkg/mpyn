@@ -111,7 +111,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
 
   const [otp, setOtp] = useState('');
 
-  const sendMagicLink = async (isSignup: boolean) => {
+  const sendOtpCode = async (isSignup: boolean) => {
     if (!email) return;
     if (!isSupabaseConfigured) {
       setError('Supabase is not configured.');
@@ -135,10 +135,6 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
         email,
         options: {
           shouldCreateUser: isSignup,
-          emailRedirectTo:
-            typeof window !== 'undefined'
-              ? `${window.location.origin}/?auth_intent=${isSignup ? 'signup' : 'signin'}`
-              : undefined,
         },
       });
       if (signInError) throw signInError;
@@ -146,7 +142,32 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       if (isSignup) goSignupNext();
       else setSigninStep(2);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to send magic link');
+      setError(e instanceof Error ? e.message : 'Failed to send OTP code');
+      haptic.error();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verifyOtpCode = async (isSignup: boolean) => {
+    if (!email || otp.length < 6) return;
+    setLoading(true);
+    setError('');
+    try {
+      const { error: verifyErr } = await supabase.auth.verifyOtp({
+        email,
+        token: otp,
+        type: 'email',
+      });
+      if (verifyErr) throw verifyErr;
+      haptic.success();
+      if (isSignup) {
+        goSignupNext();
+      } else {
+        onComplete();
+      }
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Invalid OTP code');
       haptic.error();
     } finally {
       setLoading(false);
@@ -242,7 +263,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                 welcome back.
               </h1>
               <p className="text-muted text-sm font-body mb-8 px-6">
-                enter your email to sign in
+                enter your email to receive an OTP code
               </p>
               <div className="px-6 space-y-5">
                 <input
@@ -257,10 +278,10 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                 <motion.button
                   className="pill-btn-primary w-full disabled:opacity-40"
                   disabled={!email || loading}
-                  onClick={() => sendMagicLink(false)}
+                  onClick={() => sendOtpCode(false)}
                   {...pressScale}
                 >
-                  {loading ? 'sending...' : 'send magic link'}
+                  {loading ? 'sending code...' : 'send OTP code'}
                 </motion.button>
               </div>
             </StepWrapper>
@@ -272,18 +293,31 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                 check your email.
               </h1>
               <p className="text-muted text-sm font-body mb-8 px-6">
-                we sent a magic link to {email}
+                we sent a sign-in link to {email}
               </p>
               <div className="px-6 space-y-6">
-                <p className="text-dim text-sm font-body text-center">
-                  tap the link in your inbox to sign in.
+                <p className="text-dim text-xs font-body text-center">
+                  tap the link sent to your inbox to sign in, or enter 6-digit OTP if displayed:
                 </p>
+
+                <OtpInput value={otp} onChange={setOtp} />
+
                 {error && <p className="text-red-400 text-sm font-body text-center">{error}</p>}
+
+                <motion.button
+                  className="pill-btn-primary w-full disabled:opacity-40"
+                  disabled={otp.length < 6 || loading}
+                  onClick={() => verifyOtpCode(false)}
+                  {...pressScale}
+                >
+                  {loading ? 'verifying...' : 'verify OTP code'}
+                </motion.button>
+
                 <button
                   className="text-dim text-sm font-body w-full text-center"
-                  onClick={() => sendMagicLink(false)}
+                  onClick={() => sendOtpCode(false)}
                 >
-                  resend magic link
+                  resend email
                 </button>
               </div>
             </StepWrapper>
@@ -402,7 +436,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                 your email.
               </h1>
               <p className="text-muted text-sm font-body mb-8 px-6">
-                we&apos;ll send you a magic link
+                we&apos;ll send you a 6-digit OTP code
               </p>
               <div className="px-6 space-y-5">
                 <input
@@ -416,10 +450,10 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                 <motion.button
                   className="pill-btn-primary w-full disabled:opacity-40"
                   disabled={!email || loading}
-                  onClick={() => sendMagicLink(true)}
+                  onClick={() => sendOtpCode(true)}
                   {...pressScale}
                 >
-                  {loading ? 'sending...' : 'send magic link'}
+                  {loading ? 'sending code...' : 'send OTP code'}
                 </motion.button>
               </div>
             </StepWrapper>
@@ -428,21 +462,30 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
           {mode === 'signup' && signupStep === 5 && (
             <StepWrapper key="s5-link" custom={direction}>
               <h1 className="font-heading font-bold text-3xl text-text mb-2 px-6 pt-16">
-                check your email.
+                enter 6-digit OTP.
               </h1>
               <p className="text-muted text-sm font-body mb-8 px-6">
-                we sent a magic link to {email}
+                we sent a verification code to {email}
               </p>
               <div className="px-6 space-y-6">
-                <p className="text-dim text-sm font-body text-center">
-                  open the link in your inbox, then continue setup here.
-                </p>
+                <OtpInput value={otp} onChange={setOtp} />
+
                 {error && <p className="text-red-400 text-sm font-body text-center">{error}</p>}
+
+                <motion.button
+                  className="pill-btn-primary w-full disabled:opacity-40"
+                  disabled={otp.length < 6 || loading}
+                  onClick={() => verifyOtpCode(true)}
+                  {...pressScale}
+                >
+                  {loading ? 'verifying...' : 'verify OTP'}
+                </motion.button>
+
                 <button
                   className="text-dim text-sm font-body w-full text-center"
-                  onClick={() => sendMagicLink(true)}
+                  onClick={() => sendOtpCode(true)}
                 >
-                  resend magic link
+                  resend code
                 </button>
               </div>
             </StepWrapper>
