@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { PhoneCall, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
+import { PhoneCall, CheckCircle2, AlertCircle, Clock, Trash2 } from 'lucide-react';
 import TabBar from '@/components/tab-bar';
 import { supabase } from '@/lib/supabase';
 import { haptic, pressScale } from '@/lib/haptics';
@@ -18,6 +18,8 @@ interface Gig {
   status: 'open' | 'agreed' | 'in_progress' | 'pending_completion' | 'completed' | 'disputed';
   creator_marked_complete?: boolean;
   business_marked_complete?: boolean;
+  creator_id: string;
+  business_id: string | null;
 }
 
 export default function GigsPage() {
@@ -73,6 +75,31 @@ export default function GigsPage() {
       );
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to update gig status');
+    }
+  };
+
+  const handleDelete = async (gigId: string) => {
+    if (!window.confirm('Are you sure you want to delete this gig? This action cannot be undone.')) return;
+    
+    haptic.heavy();
+    setLoading(true);
+    setError('');
+    
+    try {
+      const { error: delErr } = await supabase
+        .from('gigs')
+        .delete()
+        .eq('id', gigId);
+
+      if (delErr) throw delErr;
+
+      setGigs((prev) => prev.filter((g) => g.id !== gigId));
+      haptic.success();
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to delete gig');
+      haptic.error();
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -140,9 +167,21 @@ export default function GigsPage() {
                         status: <span className="text-text font-bold">{gig.status.replace('_', ' ')}</span>
                       </p>
                     </div>
-                    <span className="text-text font-mono font-bold text-sm bg-elevated px-2.5 py-1 rounded-full border border-border">
-                      ₹{amount}
-                    </span>
+                    <div className="flex flex-col items-end gap-2">
+                      <span className="text-text font-mono font-bold text-sm bg-elevated px-2.5 py-1 rounded-full border border-border">
+                        ₹{amount}
+                      </span>
+                      {gig.creator_id === userId && gig.status === 'open' && (
+                        <motion.button
+                          className="p-1.5 rounded-full bg-red-500/10 text-red-500 border border-red-500/20"
+                          onClick={() => handleDelete(gig.id)}
+                          {...pressScale}
+                          title="Delete gig"
+                        >
+                          <Trash2 size={12} />
+                        </motion.button>
+                      )}
+                    </div>
                   </div>
 
                   {gig.description && (
