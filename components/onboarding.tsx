@@ -131,13 +131,20 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
         }
       }
 
-      const { error: signInError } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          shouldCreateUser: isSignup,
-        },
-      });
-      if (signInError) throw signInError;
+      if (isSignup) {
+        const { error: signUpError } = await supabase.auth.signUp({
+          email,
+        });
+        if (signUpError) throw signUpError;
+      } else {
+        const { error: signInError } = await supabase.auth.signInWithOtp({
+          email,
+          options: {
+            shouldCreateUser: false,
+          },
+        });
+        if (signInError) throw signInError;
+      }
       haptic.success();
       if (isSignup) goSignupNext();
       else setSigninStep(2);
@@ -157,7 +164,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       const { error: verifyErr } = await supabase.auth.verifyOtp({
         email,
         token: otp,
-        type: 'email',
+        type: isSignup ? 'signup' : 'email',
       });
       if (verifyErr) throw verifyErr;
       haptic.success();
