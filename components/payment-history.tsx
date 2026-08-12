@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { CreditCard, TrendingUp, TrendingDown, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { spring } from '@/lib/haptics';
 import PaymentStatus from './payment-status';
 import { convex } from '@/lib/convex';
 import { api } from '@/convex/_generated/api';
@@ -159,7 +160,7 @@ export default function PaymentHistory({
               key={payment._id}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.02 }}
+              transition={{ ...spring.default, delay: i * 0.02 }}
               className="bg-surface rounded-lg p-3 border border-border"
             >
               <div className="flex items-start justify-between mb-2">

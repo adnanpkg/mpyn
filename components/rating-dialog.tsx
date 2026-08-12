@@ -81,6 +81,7 @@ export default function RatingDialog({
             onClick={handleClose}
             className="p-2 text-muted hover:text-text transition-colors"
             whileTap={{ scale: 0.9 }}
+            transition={{ type: 'spring', ...springConfig }}
           >
             <X size={20} />
           </motion.button>
@@ -108,6 +109,7 @@ export default function RatingDialog({
                     haptic.tap();
                   }}
                   whileTap={{ scale: 0.85 }}
+                  transition={{ type: 'spring', ...springConfig }}
                 >
                   <Star
                     size={32}

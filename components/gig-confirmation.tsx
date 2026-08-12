@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Check, CreditCard, HandCoins, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { pressScale } from '@/lib/haptics';
+import { pressScale, spring } from '@/lib/haptics';
 import { openGigCheckout, verifyPayment, type RazorpayResponse } from '@/lib/razorpay';
 
 interface GigConfirmationProps {

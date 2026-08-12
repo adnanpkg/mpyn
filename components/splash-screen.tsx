@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { spring } from '@/lib/haptics';
 import dynamic from 'next/dynamic';
 import splashAnimation from './splash.json';
 
@@ -25,7 +26,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
       <motion.div
         className="fixed inset-0 bg-bg z-50"
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
+        transition={{ ...spring.default, duration: 0.3 }}
       >
         <LottiePlayer
           autoplay

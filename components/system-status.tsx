@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { CheckCircle, XCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { spring } from '@/lib/haptics';
 
 interface StatusCheckProps {
   className?: string;
@@ -200,7 +201,7 @@ export default function SystemStatus({ className = '' }: StatusCheckProps) {
             key={check.name}
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: i * 0.1 }}
+            transition={{ ...spring.default, delay: i * 0.1 }}
             className={`p-3 rounded border ${getStatusColor(check.status)}`}
           >
             <div className="flex items-center gap-2 mb-1">

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Bell, CheckCircle2, MessageSquare, Tag, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { spring } from '@/lib/haptics';
 import TabBar from '@/components/tab-bar';
 import { getCurrentUser } from '@/lib/auth';
 import { convex } from '@/lib/convex';
@@ -94,7 +95,7 @@ export default function NotificationsPage() {
                 key={notif._id}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.02 }}
+                transition={{ ...spring.default, delay: i * 0.02 }}
                 className={`p-4 rounded-card border flex items-start gap-3 transition-colors ${
                   notif.read
                     ? 'bg-surface border-border'
