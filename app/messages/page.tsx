@@ -3,11 +3,12 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
+import { motion } from 'framer-motion';
 import TabBar from '@/components/tab-bar';
 import { getCurrentUser, type User as AuthUser } from '@/lib/auth';
 import { convex } from '@/lib/convex';
 import { api } from '@/convex/_generated/api';
-import { haptic } from '@/lib/haptics';
+import { haptic, pressScale, spring } from '@/lib/haptics';
 
 interface Message {
   _id: string;
@@ -33,10 +34,11 @@ export default function MessagesPage() {
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [partner, setPartner] = useState<PartnerInfo | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [conversations, setConversations] = useState<any[]>([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
 
-  // Load user
+  // Load user and conversations
   useEffect(() => {
     const init = async () => {
       try {
@@ -46,6 +48,12 @@ export default function MessagesPage() {
           return;
         }
         setCurrentUser(u);
+        
+        // Load conversations
+        const convos = await convex.query(api.messages.getConversations, {
+          userId: u._id,
+        });
+        setConversations(convos as any[]);
       } catch (err) {
         console.error('Failed to initialize:', err);
         setError(err instanceof Error ? err.message : 'Failed to load');
@@ -256,13 +264,51 @@ export default function MessagesPage() {
       </header>
 
       <main className="px-6 space-y-3">
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <p className="text-6xl mb-4">*</p>
-          <p className="font-heading font-bold text-base text-text mb-1">no conversations yet</p>
-          <p className="text-muted text-xs font-body max-w-[220px]">
-            tap "chat & deal" on any profile to start a conversation.
-          </p>
-        </div>
+        {conversations.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <p className="text-6xl mb-4">*</p>
+            <p className="font-heading font-bold text-base text-text mb-1">no conversations yet</p>
+            <p className="text-muted text-xs font-body max-w-[220px]">
+              tap "chat & deal" on any profile to start a conversation.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {conversations.map((convo, i) => (
+              <motion.button
+                key={convo.partnerId}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ ...spring.default, delay: i * 0.02 }}
+                onClick={() => {
+                  haptic.tap();
+                  router.push(`/messages?user=${convo.partnerId}`);
+                }}
+                className="w-full p-4 rounded-card bg-surface border border-border text-left hover:border-text transition-all"
+                {...pressScale}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <h3 className="font-heading font-bold text-text">
+                      @{convo.partnerUsername || 'user'}
+                    </h3>
+                    <p className="text-xs text-muted mt-1 line-clamp-1">
+                      {convo.lastMessage?.text || 'no messages'}
+                    </p>
+                  </div>
+                  <span className="text-xs text-dim ml-2 whitespace-nowrap">
+                    {convo.lastMessage?.createdAt 
+                      ? new Date(convo.lastMessage.createdAt).toLocaleDateString('en-IN', {
+                          month: 'short',
+                          day: 'numeric',
+                        })
+                      : ''}
+                  </span>
+                </div>
+              </motion.button>
+            ))}
+          </div>
+        )}
       </main>
 
       <TabBar />
