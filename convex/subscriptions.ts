@@ -198,3 +198,31 @@ export const deactivateExpiredSubscriptions = mutation({
     return { deactivatedCount: expiredUsers.length };
   },
 });
+
+// TESTING ONLY: Manually toggle Pro status for current user
+export const toggleProStatusForTesting = mutation({
+  args: { userId: v.id('users') },
+  handler: async (ctx, { userId }) => {
+    const user = await ctx.db.get(userId);
+    if (!user) throw new Error('User not found');
+
+    const now = Date.now();
+    const thirtyDaysFromNow = now + (30 * 24 * 60 * 60 * 1000);
+
+    if (user.isPro) {
+      // Deactivate Pro
+      await ctx.db.patch(userId, {
+        isPro: false,
+        proExpiresAt: undefined,
+      });
+      return { isPro: false, message: 'Pro status removed' };
+    } else {
+      // Activate Pro
+      await ctx.db.patch(userId, {
+        isPro: true,
+        proExpiresAt: thirtyDaysFromNow,
+      });
+      return { isPro: true, message: 'Pro status activated for 30 days' };
+    }
+  },
+});
