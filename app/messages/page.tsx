@@ -209,19 +209,8 @@ export default function MessagesPage() {
           )}
         </main>
 
-        {/* Payment / Request buttons */}
-        {(showPayButton || showRequestButton) && (
-          <div className="px-6 py-2 border-t border-border bg-bg/50">
-            <button
-              onClick={handlePaymentClick}
-              className="w-full py-2 px-4 bg-text text-bg rounded-lg text-xs font-bold hover:opacity-80"
-            >
-              {showPayButton ? 'PAY' : 'REQUEST PAY'}
-            </button>
-          </div>
-        )}
-
-        <div className="fixed bottom-16 left-0 right-0 px-6 py-3 bg-bg border-t border-border">
+        {/* Payment / Request button + Message input */}
+        <div className="px-6 py-3 border-t border-border bg-bg">
           <div className="flex gap-2">
             <input
               className="flex-1 bg-surface border border-border px-3 py-2 rounded-lg text-xs text-text outline-none"
@@ -231,6 +220,15 @@ export default function MessagesPage() {
               onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
               disabled={sending}
             />
+            {(showPayButton || showRequestButton) && (
+              <button
+                onClick={handlePaymentClick}
+                className="px-3 py-2 bg-text text-bg rounded-lg text-xs font-bold hover:opacity-80"
+                title={showPayButton ? 'Send payment request' : 'Request payment'}
+              >
+                {showPayButton ? 'PAY' : 'REQ'}
+              </button>
+            )}
             <button
               onClick={sendMessage}
               disabled={!input.trim() || sending}
