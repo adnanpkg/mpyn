@@ -17,10 +17,10 @@ interface Message {
   createdAt: number;
 }
 
-interface Conversation {
-  partnerId: string;
-  partnerName?: string;
-  lastMessage?: string;
+interface PartnerInfo {
+  _id: string;
+  username?: string;
+  role?: string;
 }
 
 export default function MessagesPage() {
@@ -31,12 +31,12 @@ export default function MessagesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
-  const [partnerName, setPartnerName] = useState<string>('');
+  const [partner, setPartner] = useState<PartnerInfo | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
 
-  // Load user and conversations
+  // Load user
   useEffect(() => {
     const init = async () => {
       try {
@@ -64,10 +64,10 @@ export default function MessagesPage() {
     const loadThread = async () => {
       try {
         // Get partner info
-        const partner = await convex.query(api.users.getById, {
+        const partnerData = await convex.query(api.users.getById, {
           userId: targetUserId as any,
         });
-        setPartnerName((partner as any)?.username || 'user');
+        setPartner(partnerData as PartnerInfo);
 
         // Get messages
         const thread = await convex.query(api.messages.getThread, {
@@ -110,6 +110,38 @@ export default function MessagesPage() {
     }
   };
 
+  const handlePaymentClick = async () => {
+    if (!currentUser || !targetUserId || !partner) return;
+    
+    haptic.tap();
+    
+    // Determine who is creator/business
+    const isCurrentUserBusiness = currentUser.role === 'business';
+    const isPartnerCreator = partner.role === 'creator';
+
+    if (isCurrentUserBusiness && isPartnerCreator) {
+      // Business paying creator - open payment flow
+      // Send payment request message first
+      await convex.mutation(api.messages.send, {
+        senderId: currentUser._id,
+        receiverId: targetUserId as any,
+        text: '💰 sent payment request',
+      });
+
+      // TODO: Open Razorpay checkout modal
+      console.log('Opening payment checkout...');
+    } else if (!isCurrentUserBusiness && partner.role === 'business') {
+      // Creator requesting payment from business
+      await convex.mutation(api.messages.send, {
+        senderId: currentUser._id,
+        receiverId: targetUserId as any,
+        text: '💰 requesting payment',
+      });
+      
+      console.log('Payment request sent');
+    }
+  };
+
   if (loading) {
     return (
       <div className="app-container bg-bg min-h-screen flex items-center justify-center">
@@ -131,6 +163,11 @@ export default function MessagesPage() {
 
   // Thread view (when ?user=ID is in URL)
   if (targetUserId) {
+    const isCurrentUserBusiness = currentUser?.role === 'business';
+    const isPartnerCreator = partner?.role === 'creator';
+    const showPayButton = isCurrentUserBusiness && isPartnerCreator;
+    const showRequestButton = !isCurrentUserBusiness && partner?.role === 'business';
+
     return (
       <div className="app-container bg-bg min-h-screen flex flex-col pb-24">
         <header className="px-6 pt-14 pb-4 border-b border-border">
@@ -143,12 +180,15 @@ export default function MessagesPage() {
           >
             <ArrowLeft size={20} />
           </button>
-          <h2 className="font-heading font-bold text-lg text-text">@{partnerName}</h2>
+          <h2 className="font-heading font-bold text-lg text-text">@{partner?.username || 'user'}</h2>
         </header>
 
         <main className="flex-1 px-6 py-4 overflow-y-auto space-y-2">
           {messages.length === 0 ? (
-            <p className="text-center text-muted text-xs py-8">no messages yet. start chatting!</p>
+            <div className="text-center py-12">
+              <p className="text-6xl mb-4">✻</p>
+              <p className="text-muted text-xs">no messages yet</p>
+            </div>
           ) : (
             messages.map((msg) => {
               const isMine = msg.senderId === currentUser?._id;
@@ -168,6 +208,18 @@ export default function MessagesPage() {
             })
           )}
         </main>
+
+        {/* Payment / Request buttons */}
+        {(showPayButton || showRequestButton) && (
+          <div className="px-6 py-2 border-t border-border bg-bg/50">
+            <button
+              onClick={handlePaymentClick}
+              className="w-full py-2 px-4 bg-text text-bg rounded-lg text-xs font-bold hover:opacity-80"
+            >
+              {showPayButton ? 'PAY' : 'REQUEST PAY'}
+            </button>
+          </div>
+        )}
 
         <div className="fixed bottom-16 left-0 right-0 px-6 py-3 bg-bg border-t border-border">
           <div className="flex gap-2">
@@ -204,9 +256,10 @@ export default function MessagesPage() {
 
       <main className="px-6 space-y-3">
         <div className="flex flex-col items-center justify-center py-20 text-center">
+          <p className="text-6xl mb-4">✻</p>
           <p className="font-heading font-bold text-base text-text mb-1">no messages yet</p>
           <p className="text-muted text-xs font-body max-w-[220px]">
-            tap "chat & deal" on any profile in your home feed to start a conversation.
+            tap "chat & deal" on any profile to start a conversation.
           </p>
         </div>
       </main>
