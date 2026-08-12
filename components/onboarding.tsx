@@ -18,9 +18,9 @@ type SignupStep = 1 | 2 | 3 | 4 | 5 | 6;
 type SigninStep = 1 | 2 | 3;
 
 const slideVariants = {
-  enter: (dir: number) => ({ x: dir > 0 ? 300 : -300, opacity: 0 }),
-  center: { x: 0, opacity: 1 },
-  exit: (dir: number) => ({ x: dir > 0 ? -300 : 300, opacity: 0 }),
+  enter: (dir: number) => ({ filter: 'blur(10px)', opacity: 0 }),
+  center: { filter: 'blur(0px)', opacity: 1 },
+  exit: (dir: number) => ({ filter: 'blur(10px)', opacity: 0 }),
 };
 
 export default function Onboarding({ onComplete }: OnboardingProps) {
