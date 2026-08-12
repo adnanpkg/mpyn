@@ -53,6 +53,7 @@ export default function MessagesPage() {
   const [activeGig, setActiveGig] = useState<Gig | null>(null);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [confirmingGig, setConfirmingGig] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -112,6 +113,7 @@ export default function MessagesPage() {
         }
       } catch (error) {
         console.error('Failed to initialize messages:', error);
+        setError(error instanceof Error ? error.message : 'Failed to load messages');
       } finally {
         setLoading(false);
       }
@@ -251,7 +253,20 @@ export default function MessagesPage() {
         </header>
 
         <main className="flex-1 px-6 py-4 space-y-3 overflow-y-auto pb-24">
-          {loading ? (
+          {error ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <p className="text-red-500 font-mono text-xs mb-2">error loading messages</p>
+                <p className="text-muted text-xs">{error}</p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="mt-4 px-4 py-2 bg-text text-bg rounded-lg text-xs font-mono"
+                >
+                  retry
+                </button>
+              </div>
+            </div>
+          ) : loading ? (
             <div className="space-y-3 pt-4">
               <div className="skeleton w-48 h-8 rounded-2xl" />
               <div className="skeleton w-36 h-8 rounded-2xl ml-auto" />
@@ -338,7 +353,20 @@ export default function MessagesPage() {
       </header>
 
       <main className="px-6">
-        {loading ? (
+        {error ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <p className="text-red-500 font-mono text-xs mb-2">error loading conversations</p>
+              <p className="text-muted text-xs">{error}</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-4 px-4 py-2 bg-text text-bg rounded-lg text-xs font-mono"
+              >
+                retry
+              </button>
+            </div>
+          </div>
+        ) : loading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
               <div key={i} className="skeleton w-full h-16 rounded-card" />
