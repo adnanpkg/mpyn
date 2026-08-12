@@ -107,10 +107,10 @@ export default function ProfilePage() {
           </div>
           <div className="flex-1 p-3 rounded-card bg-surface border border-border text-center">
             <p className="font-heading font-bold text-xl text-text">
-              {user?.rating ? user.rating.toFixed(1) : '5.0'}
+              {user?.rating && user.rating > 0 ? user.rating.toFixed(1) : '—'}
             </p>
             <p className="text-dim text-[10px] font-mono flex items-center justify-center gap-1 mt-0.5">
-              <Star size={10} /> rating
+              <Star size={10} /> {user?.rating && user.rating > 0 ? 'rating' : 'no rating yet'}
             </p>
           </div>
         </div>

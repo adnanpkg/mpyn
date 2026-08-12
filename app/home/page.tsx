@@ -222,7 +222,7 @@ export default function HomePage() {
                     <div className="flex items-center gap-3">
                       <span className="flex items-center gap-1 text-muted">
                         <Star size={11} className="text-text fill-text" />
-                        {item.rating ? item.rating.toFixed(1) : '5.0'}
+                        {item.rating && item.rating > 0 ? item.rating.toFixed(1) : '—'}
                       </span>
                       <span>{item.ordersCount ?? 0} orders</span>
                     </div>

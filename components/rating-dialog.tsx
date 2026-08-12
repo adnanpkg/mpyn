@@ -88,10 +88,10 @@ export default function RatingDialog({
               >
                 <Star
                   size={24}
-                  className={`transition-colors ${
+                  className={`transition-all ${
                     star <= (hoverRating || rating)
-                      ? 'text-yellow-400 fill-yellow-400'
-                      : 'text-gray-300'
+                      ? 'text-text fill-text'
+                      : 'text-dim'
                   }`}
                 />
               </button>
