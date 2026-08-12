@@ -53,9 +53,6 @@ export default function CreateGigPage() {
       router.replace('/gigs');
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'failed to create gig');
-      setLoading(false);
-    }
-  };
       haptic.error();
     } finally {
       setLoading(false);
