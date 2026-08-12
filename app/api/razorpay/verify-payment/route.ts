@@ -7,6 +7,13 @@ const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 export async function POST(request: NextRequest) {
   try {
+    // Check for required environment variables
+    if (!process.env.RAZORPAY_KEY_SECRET) {
+      return NextResponse.json(
+        { error: 'Razorpay configuration not available' },
+        { status: 500 }
+      );
+    }
     const {
       razorpay_order_id,
       razorpay_payment_id,
