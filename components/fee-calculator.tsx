@@ -21,8 +21,8 @@ export default function FeeCalculator({ amount, isPro = false, className = '' }:
         <span className="text-xs font-mono text-muted">fee breakdown</span>
         {isPro && (
           <div className="flex items-center gap-1 text-xs">
-            <Crown size={12} className="text-purple-600" />
-            <span className="text-purple-600 font-mono">Pro</span>
+            <span className="text-text font-mono">*</span>
+            <span className="text-text font-mono">Pro</span>
           </div>
         )}
       </div>
@@ -37,7 +37,7 @@ export default function FeeCalculator({ amount, isPro = false, className = '' }:
           <span className="text-muted">platform fee</span>
           <span className="font-mono text-text">
             {isPro ? (
-              <span className="text-green-600">₹0 (Pro benefit *)</span>
+              <span className="text-text">₹0 (Pro benefit *)</span>
             ) : (
               `₹${platformFee.toLocaleString()} (5%)`
             )}
@@ -53,7 +53,7 @@ export default function FeeCalculator({ amount, isPro = false, className = '' }:
       {!isPro && amount >= 3800 && (
         <div className="mt-2 pt-2 border-t border-border/50">
           <p className="text-xs text-muted">
-            💡 Pro subscription (₹190/month) saves ₹{platformFee.toLocaleString()} on this gig
+            * Pro subscription (₹190/month) saves ₹{platformFee.toLocaleString()} on this gig
           </p>
         </div>
       )}
