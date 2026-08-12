@@ -24,7 +24,7 @@ export default function CreateGigPage() {
   const [error, setError] = useState('');
   const [user, setUser] = useState<any>(null);
 
-  // Load user on mount
+  // Load user on mount to get Pro status
   useEffect(() => {
     getCurrentUser().then(setUser);
   }, []);
