@@ -50,6 +50,7 @@ export default function BusinessProfileForm({ initial, onSave, submitLabel = 'sa
     if (!isValid) return;
     setLoading(true);
     setError('');
+    haptic.tap();
     try {
       const u = await getCurrentUser();
       if (!u) throw new Error('not authenticated');

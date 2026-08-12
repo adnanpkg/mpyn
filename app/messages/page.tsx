@@ -87,6 +87,7 @@ export default function MessagesPage() {
     if (!input.trim() || !currentUser || !targetUserId) return;
 
     setSending(true);
+    haptic.tap();
     try {
       await convex.mutation(api.messages.send, {
         senderId: currentUser._id,
@@ -94,6 +95,7 @@ export default function MessagesPage() {
         text: input.trim(),
       });
       
+      haptic.success();
       setInput('');
       
       // Reload messages
@@ -104,7 +106,8 @@ export default function MessagesPage() {
       setMessages(thread as Message[]);
     } catch (err) {
       console.error('Failed to send message:', err);
-      setError('Failed to send message');
+      haptic.error();
+      setError('failed to send message');
     } finally {
       setSending(false);
     }

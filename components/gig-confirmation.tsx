@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Check, CreditCard, HandCoins, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { pressScale, spring } from '@/lib/haptics';
+import { pressScale, spring, haptic } from '@/lib/haptics';
 import { openGigCheckout, verifyPayment, type RazorpayResponse } from '@/lib/razorpay';
 
 interface GigConfirmationProps {
@@ -58,6 +58,7 @@ export default function GigConfirmation({
   };
 
   const handleModeSelect = (mode: 'advance' | 'direct') => {
+    haptic.tap();
     setPaymentMode(mode);
     onConfirm(mode);
   };
@@ -79,21 +80,24 @@ export default function GigConfirmation({
           try {
             // Verify payment on server
             await verifyPayment(response, gig._id, currentUserId, paymentType);
+            haptic.success();
             
             // Call success callback
             onPaymentSuccess?.();
             
-            alert('Payment successful! Gig is now active.');
+            alert('payment successful! gig is now active.');
           } catch (error) {
             console.error('Payment verification failed:', error);
-            alert('Payment verification failed. Please contact support.');
+            haptic.error();
+            alert('payment verification failed. please contact support.');
           } finally {
             setProcessingPayment(false);
           }
         },
         (error: any) => {
           console.error('Payment failed:', error);
-          alert('Payment failed. Please try again.');
+          haptic.error();
+          alert('payment failed. please try again.');
           setProcessingPayment(false);
         },
         () => {
@@ -103,7 +107,8 @@ export default function GigConfirmation({
       );
     } catch (error) {
       console.error('Payment initialization failed:', error);
-      alert('Failed to initialize payment. Please try again.');
+      haptic.error();
+      alert('failed to initialize payment. please try again.');
       setProcessingPayment(false);
     }
   };

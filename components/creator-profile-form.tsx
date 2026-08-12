@@ -45,6 +45,7 @@ export default function CreatorProfileForm({ initial, onSave, submitLabel = 'sav
     if (!isValid) return;
     setLoading(true);
     setError('');
+    haptic.tap();
     try {
       const u = await getCurrentUser();
       if (!u) throw new Error('not authenticated');
@@ -105,7 +106,7 @@ export default function CreatorProfileForm({ initial, onSave, submitLabel = 'sav
                     ? 'bg-text text-bg border-text'
                     : 'bg-surface text-text border-border'
                 }`}
-                onClick={() => toggleCategory(cat)}
+                onClick={() => { haptic.tap(); toggleCategory(cat); }}
                 whileTap={{ scale: 0.96 }}
                 transition={spring.default}
               >

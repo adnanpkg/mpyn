@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { CheckCircle, Star, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import RatingDialog from './rating-dialog';
-import { pressScale } from '@/lib/haptics';
+import { pressScale, haptic } from '@/lib/haptics';
 import { convex } from '@/lib/convex';
 import { api } from '@/convex/_generated/api';
 
@@ -77,10 +77,12 @@ export default function GigCompletion({
           userId: currentUserId as any,
         });
       }
+      haptic.heavy();
       onStatusUpdate?.();
     } catch (error: any) {
       console.error('Failed to mark complete:', error);
-      alert(error.message || 'Failed to mark gig complete. Please try again.');
+      haptic.error();
+      alert(error.message || 'failed to mark gig complete. please try again.');
     } finally {
       setMarkingComplete(false);
     }
@@ -128,7 +130,7 @@ export default function GigCompletion({
         {reviewInfo?.canReview && (
           <motion.button
             className="w-full bg-text text-bg py-3 px-4 rounded-pill font-heading font-bold text-sm flex items-center justify-center gap-2"
-            onClick={() => setShowRatingDialog(true)}
+            onClick={() => { haptic.tap(); setShowRatingDialog(true); }}
             {...pressScale}
           >
             <Star size={16} />
