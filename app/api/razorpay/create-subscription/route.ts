@@ -63,17 +63,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create subscription
-    const subscription = await razorpay.subscriptions.create({
+    // Create subscription - using simpler approach for TypeScript compatibility
+    const subscriptionData: any = {
       plan_id: plan.id,
-      customer_id: customer.id,
+      customer_notify: 1,
       quantity: 1,
-      total_count: 12, // 12 months max, then auto-renewal
+      total_count: 12,
       notes: {
         userId,
         subscriptionType: 'multiply_pro',
       },
-    });
+    };
+
+    const subscription = await razorpay.subscriptions.create(subscriptionData);
 
     return NextResponse.json({
       subscriptionId: subscription.id,
