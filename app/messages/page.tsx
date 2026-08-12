@@ -61,55 +61,60 @@ export default function MessagesPage() {
 
   useEffect(() => {
     const init = async () => {
-      const u = await getCurrentUser();
-      if (!u) { router.replace('/'); return; }
-      setCurrentUser(u);
+      try {
+        const u = await getCurrentUser();
+        if (!u) { router.replace('/'); return; }
+        setCurrentUser(u);
 
-      if (targetUserId) {
-        // Load thread
-        const thread = await convex.query(api.messages.getThread, {
-          userId: u._id,
-          partnerId: targetUserId as any,
-        });
-        setMessages(thread as Message[]);
-
-        // Get partner info
-        const partner = await convex.query(api.users.getById, {
-          userId: targetUserId as any,
-        });
-        setPartnerInfo(partner as any);
-
-        // Get active gig between users (either direction)
-        let gig = await convex.query(api.gigs.getActiveGigBetweenUsers, {
-          creatorId: u._id,
-          businessId: targetUserId as any,
-        });
-        
-        if (!gig) {
-          // Try reverse direction (partner as creator, current user as business)
-          gig = await convex.query(api.gigs.getActiveGigBetweenUsers, {
-            creatorId: targetUserId as any,
-            businessId: u._id,
+        if (targetUserId) {
+          // Load thread
+          const thread = await convex.query(api.messages.getThread, {
+            userId: u._id,
+            partnerId: targetUserId as any,
           });
+          setMessages(thread as Message[]);
+
+          // Get partner info
+          const partner = await convex.query(api.users.getById, {
+            userId: targetUserId as any,
+          });
+          setPartnerInfo(partner as any);
+
+          // Get active gig between users (either direction)
+          let gig = await convex.query(api.gigs.getActiveGigBetweenUsers, {
+            creatorId: u._id,
+            businessId: targetUserId as any,
+          });
+          
+          if (!gig) {
+            // Try reverse direction (partner as creator, current user as business)
+            gig = await convex.query(api.gigs.getActiveGigBetweenUsers, {
+              creatorId: targetUserId as any,
+              businessId: u._id,
+            });
+          }
+          
+          setActiveGig(gig as Gig | null);
+
+          // Mark messages read
+          await convex.mutation(api.messages.markRead, {
+            userId: u._id,
+            partnerId: targetUserId as any,
+          });
+
+          setTimeout(scrollToBottom, 100);
+        } else {
+          // Load conversation list
+          const convos = await convex.query(api.messages.getConversations, {
+            userId: u._id,
+          });
+          setConversations(convos as Conversation[]);
         }
-        
-        setActiveGig(gig as Gig | null);
-
-        // Mark messages read
-        await convex.mutation(api.messages.markRead, {
-          userId: u._id,
-          partnerId: targetUserId as any,
-        });
-
-        setTimeout(scrollToBottom, 100);
-      } else {
-        // Load conversation list
-        const convos = await convex.query(api.messages.getConversations, {
-          userId: u._id,
-        });
-        setConversations(convos as Conversation[]);
+      } catch (error) {
+        console.error('Failed to initialize messages:', error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     init();
   }, [router, targetUserId]);
