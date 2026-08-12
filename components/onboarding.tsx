@@ -14,7 +14,7 @@ interface OnboardingProps {
 }
 
 type Mode = 'welcome' | 'signup' | 'signin';
-type SignupStep = 1 | 2 | 3 | 4 | 5 | 6;
+type SignupStep = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 type SigninStep = 1 | 2 | 3;
 
 const slideVariants = {
@@ -30,6 +30,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   const [direction, setDirection] = useState(1);
 
   // Onboarding data
+  const [selectedCountry, setSelectedCountry] = useState('India'); // Default to India
   const [selectedState, setSelectedState] = useState('');
   const [selectedCity, setSelectedCity] = useState('');
   const [role, setRole] = useState<'creator' | 'business' | ''>('');
@@ -48,7 +49,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
 
   const goSignupNext = useCallback(() => {
     setDirection(1);
-    setSignupStep((s) => Math.min(s + 1, 6) as SignupStep);
+    setSignupStep((s) => Math.min(s + 1, 7) as SignupStep);
     setError('');
   }, []);
 
@@ -383,9 +384,34 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             </StepWrapper>
           )}
 
-          {/* ── SIGNUP step 4 — email ────────────────────────── */}
+          {/* ── SIGNUP step 4 — country ──────────────────────── */}
           {mode === 'signup' && signupStep === 4 && (
             <StepWrapper key="s4" custom={direction}>
+              <div className="flex flex-col px-6 pt-16">
+                <h1 className="font-heading font-bold text-3xl text-text mb-8">where are you from?</h1>
+                <div className="space-y-2">
+                  <motion.button
+                    className="w-full p-4 rounded-card border border-border bg-surface text-left hover:border-text transition-all"
+                    onClick={() => {
+                      haptic.tap();
+                      setSelectedCountry('India');
+                      goSignupNext();
+                    }}
+                    whileTap={{ scale: 0.96 }}
+                    transition={spring.default}
+                  >
+                    <p className="font-heading font-bold text-text">India</p>
+                    <p className="text-xs text-muted mt-1">connecting creators & businesses</p>
+                  </motion.button>
+                </div>
+                <p className="text-xs text-dim mt-6 text-center">more countries coming soon</p>
+              </div>
+            </StepWrapper>
+          )}
+
+          {/* ── SIGNUP step 5 — email ────────────────────────── */}
+          {mode === 'signup' && signupStep === 5 && (
+            <StepWrapper key="s5" custom={direction}>
               <div className="flex flex-col px-6 pt-16">
                 <h1 className="font-heading font-bold text-3xl text-text mb-2">your email.</h1>
                 <p className="text-muted text-sm font-body mb-8">
@@ -412,9 +438,9 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             </StepWrapper>
           )}
 
-          {/* ── SIGNUP step 5 — enter OTP ────────────────────── */}
-          {mode === 'signup' && signupStep === 5 && (
-            <StepWrapper key="s5" custom={direction}>
+          {/* ── SIGNUP step 6 — enter OTP ────────────────────── */}
+          {mode === 'signup' && signupStep === 6 && (
+            <StepWrapper key="s6" custom={direction}>
               <div className="flex flex-col items-center px-6 pt-20 text-center">
                 <div className="w-16 h-16 rounded-full bg-elevated border border-border flex items-center justify-center mb-6">
                   <Mail size={26} className="text-text" />
@@ -447,9 +473,9 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             </StepWrapper>
           )}
 
-          {/* ── SIGNUP step 6 — username ─────────────────────── */}
-          {mode === 'signup' && signupStep === 6 && (
-            <StepWrapper key="s6" custom={direction}>
+          {/* ── SIGNUP step 7 — username ─────────────────────── */}
+          {mode === 'signup' && signupStep === 7 && (
+            <StepWrapper key="s7" custom={direction}>
               <div className="flex flex-col px-6 pt-16">
                 <h1 className="font-heading font-bold text-3xl text-text mb-2">pick a username.</h1>
                 <p className="text-muted text-sm font-body mb-8">
