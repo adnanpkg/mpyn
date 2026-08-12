@@ -21,23 +21,18 @@ export async function POST(request: NextRequest) {
     // Create or get Razorpay customer
     let customer;
     try {
-      // Try to find existing customer by email
-      const customers = await razorpay.customers.all({ email: customerEmail });
-      if (customers.items.length > 0) {
-        customer = customers.items[0];
-      } else {
-        // Create new customer
-        customer = await razorpay.customers.create({
-          name: `User ${userId}`,
-          email: customerEmail,
-          contact: '', // Optional: add phone if available
-          notes: {
-            userId,
-          },
-        });
-      }
+      // For simplicity, create a new customer each time
+      // In production, you might want to store customer IDs in your database
+      customer = await razorpay.customers.create({
+        name: `User ${userId}`,
+        email: customerEmail,
+        contact: '', // Optional: add phone if available
+        notes: {
+          userId,
+        },
+      });
     } catch (error) {
-      console.error('Customer creation/retrieval failed:', error);
+      console.error('Customer creation failed:', error);
       return NextResponse.json(
         { error: 'Failed to create customer' },
         { status: 500 }
