@@ -1,16 +1,42 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { ArrowLeft } from 'lucide-react';
 import TabBar from '@/components/tab-bar';
-import { getCurrentUser } from '@/lib/auth';
+import { getCurrentUser, type User as AuthUser } from '@/lib/auth';
+import { convex } from '@/lib/convex';
+import { api } from '@/convex/_generated/api';
 import { haptic } from '@/lib/haptics';
+
+interface Message {
+  _id: string;
+  senderId: string;
+  receiverId: string;
+  text: string;
+  createdAt: number;
+}
+
+interface Conversation {
+  partnerId: string;
+  partnerName?: string;
+  lastMessage?: string;
+}
 
 export default function MessagesPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const targetUserId = searchParams.get('user');
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
+  const [partnerName, setPartnerName] = useState<string>('');
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
+  const [sending, setSending] = useState(false);
 
+  // Load user and conversations
   useEffect(() => {
     const init = async () => {
       try {
@@ -19,6 +45,7 @@ export default function MessagesPage() {
           router.replace('/');
           return;
         }
+        setCurrentUser(u);
       } catch (err) {
         console.error('Failed to initialize:', err);
         setError(err instanceof Error ? err.message : 'Failed to load');
@@ -30,12 +57,63 @@ export default function MessagesPage() {
     init();
   }, [router]);
 
+  // Load thread when targetUserId changes
+  useEffect(() => {
+    if (!targetUserId || !currentUser) return;
+
+    const loadThread = async () => {
+      try {
+        // Get partner info
+        const partner = await convex.query(api.users.getById, {
+          userId: targetUserId as any,
+        });
+        setPartnerName((partner as any)?.username || 'user');
+
+        // Get messages
+        const thread = await convex.query(api.messages.getThread, {
+          userId: currentUser._id,
+          partnerId: targetUserId as any,
+        });
+        setMessages(thread as Message[]);
+      } catch (err) {
+        console.error('Failed to load thread:', err);
+      }
+    };
+
+    loadThread();
+  }, [targetUserId, currentUser]);
+
+  const sendMessage = async () => {
+    if (!input.trim() || !currentUser || !targetUserId) return;
+
+    setSending(true);
+    try {
+      await convex.mutation(api.messages.send, {
+        senderId: currentUser._id,
+        receiverId: targetUserId as any,
+        text: input.trim(),
+      });
+      
+      setInput('');
+      
+      // Reload messages
+      const thread = await convex.query(api.messages.getThread, {
+        userId: currentUser._id,
+        partnerId: targetUserId as any,
+      });
+      setMessages(thread as Message[]);
+    } catch (err) {
+      console.error('Failed to send message:', err);
+      setError('Failed to send message');
+    } finally {
+      setSending(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="app-container bg-bg min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-muted font-mono text-sm">loading messages...</p>
-        </div>
+        <p className="text-muted font-mono text-sm">loading...</p>
       </div>
     );
   }
@@ -46,17 +124,77 @@ export default function MessagesPage() {
         <div className="text-center">
           <p className="text-red-500 font-mono text-xs mb-2">error</p>
           <p className="text-muted text-xs">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-text text-bg rounded-lg text-xs font-mono"
-          >
-            retry
-          </button>
         </div>
       </div>
     );
   }
 
+  // Thread view (when ?user=ID is in URL)
+  if (targetUserId) {
+    return (
+      <div className="app-container bg-bg min-h-screen flex flex-col pb-24">
+        <header className="px-6 pt-14 pb-4 border-b border-border">
+          <button
+            onClick={() => {
+              haptic.tap();
+              router.push('/messages');
+            }}
+            className="mb-2 text-muted hover:text-text"
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <h2 className="font-heading font-bold text-lg text-text">@{partnerName}</h2>
+        </header>
+
+        <main className="flex-1 px-6 py-4 overflow-y-auto space-y-2">
+          {messages.length === 0 ? (
+            <p className="text-center text-muted text-xs py-8">no messages yet. start chatting!</p>
+          ) : (
+            messages.map((msg) => {
+              const isMine = msg.senderId === currentUser?._id;
+              return (
+                <div key={msg._id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
+                  <div
+                    className={`max-w-xs px-3 py-2 rounded-lg text-xs ${
+                      isMine
+                        ? 'bg-text text-bg'
+                        : 'bg-surface text-text border border-border'
+                    }`}
+                  >
+                    {msg.text}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </main>
+
+        <div className="fixed bottom-16 left-0 right-0 px-6 py-3 bg-bg border-t border-border">
+          <div className="flex gap-2">
+            <input
+              className="flex-1 bg-surface border border-border px-3 py-2 rounded-lg text-xs text-text outline-none"
+              placeholder="message..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+              disabled={sending}
+            />
+            <button
+              onClick={sendMessage}
+              disabled={!input.trim() || sending}
+              className="px-4 py-2 bg-text text-bg rounded-lg text-xs font-bold disabled:opacity-50"
+            >
+              send
+            </button>
+          </div>
+        </div>
+
+        <TabBar />
+      </div>
+    );
+  }
+
+  // Conversation list view (default)
   return (
     <div className="app-container bg-bg min-h-screen pb-24">
       <header className="px-6 pt-14 pb-4">
