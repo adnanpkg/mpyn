@@ -111,7 +111,7 @@ export default function GigConfirmation({
   return (
     <div className="border-t border-border pt-4 space-y-3">
       {/* Gig Summary */}
-      <div className="bg-surface rounded-lg p-3 border border-border">
+      <div className="bg-surface rounded-card p-3 border border-border">
         <h4 className="font-heading font-bold text-sm text-text mb-1">
           {gig.title}
         </h4>
@@ -124,7 +124,7 @@ export default function GigConfirmation({
             <span className="text-muted">platform fee</span>
             <span className="font-mono text-text">
               {businessIsPro ? (
-                <span className="text-green-500">₹0 — Pro member ✳</span>
+                <span className="text-text">₹0 — Pro member ✳</span>
               ) : (
                 `₹${platformFee.toLocaleString()}`
               )}
@@ -146,7 +146,7 @@ export default function GigConfirmation({
       {/* Confirm Button (for open gigs) */}
       {showConfirmButton && !showModeSelection && (
         <motion.button
-          className="w-full bg-text text-bg py-3 px-4 rounded-lg font-heading font-bold text-sm disabled:opacity-50"
+          className="w-full bg-text text-bg py-3 px-4 rounded-pill font-heading font-bold text-sm disabled:opacity-50"
           onClick={handleConfirmClick}
           disabled={loading}
           {...pressScale}
@@ -163,7 +163,7 @@ export default function GigConfirmation({
           </h4>
           
           <motion.button
-            className="w-full p-4 rounded-lg border border-border bg-surface text-left"
+            className="w-full p-4 rounded-card border border-border bg-surface text-left"
             onClick={() => handleModeSelect('advance')}
             disabled={loading}
             {...pressScale}
@@ -186,7 +186,7 @@ export default function GigConfirmation({
           </motion.button>
 
           <motion.button
-            className="w-full p-4 rounded-lg border border-border bg-surface text-left"
+            className="w-full p-4 rounded-card border border-border bg-surface text-left"
             onClick={() => handleModeSelect('direct')}
             disabled={loading}
             {...pressScale}
@@ -212,14 +212,14 @@ export default function GigConfirmation({
       {/* Payment Button (after gig confirmation) */}
       {showPaymentButton && (
         <div className="space-y-3">
-          <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
-            <p className="text-xs text-green-700">
+          <div className="bg-surface border border-border rounded-card p-3 mb-3">
+            <p className="text-xs text-text">
               ✓ gig confirmed! proceed to payment to activate.
             </p>
           </div>
           
           <motion.button
-            className="w-full bg-text text-bg py-3 px-4 rounded-lg font-heading font-bold text-sm disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full bg-text text-bg py-3 px-4 rounded-pill font-heading font-bold text-sm disabled:opacity-50 flex items-center justify-center gap-2"
             onClick={() => handlePayment((gig as any).paymentMode as 'advance' | 'direct' || 'direct')}
             disabled={processingPayment}
             {...pressScale}
@@ -238,15 +238,15 @@ export default function GigConfirmation({
 
       {/* Payment Status (for completed payments) */}
       {showPaymentStatus && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+        <div className="bg-surface border border-border rounded-card p-3">
           <div className="flex items-center gap-2 mb-2">
-            <Check size={16} className="text-yellow-600" />
-            <span className="font-heading font-bold text-sm text-yellow-800">
+            <Check size={16} className="text-text" />
+            <span className="font-heading font-bold text-sm text-text">
               {gig.status === 'payment_pending' ? 'payment processing' : 
                gig.status === 'payment_done' || gig.status === 'in_progress' ? 'payment completed' : 'gig confirmed'}
             </span>
           </div>
-          <p className="text-xs text-yellow-700">
+          <p className="text-xs text-muted">
             {gig.status === 'payment_pending' ? (
               'payment in progress...'
             ) : gig.status === 'payment_done' || gig.status === 'in_progress' ? (

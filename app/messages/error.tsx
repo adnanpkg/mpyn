@@ -18,7 +18,7 @@ export default function ErrorBoundary({
         </p>
         <button
           onClick={reset}
-          className="px-6 py-3 bg-text text-bg rounded-lg font-heading font-bold text-sm"
+          className="px-6 py-3 bg-text text-bg rounded-full font-heading font-bold text-sm"
         >
           try again
         </button>

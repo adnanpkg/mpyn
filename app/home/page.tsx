@@ -66,8 +66,8 @@ export default function HomePage() {
     return (
       <div className="app-container bg-bg min-h-screen p-6 space-y-6">
         <div className="pt-12">
-          <div className="skeleton w-32 h-7 rounded-md mb-2" />
-          <div className="skeleton w-48 h-4 rounded-md" />
+          <div className="skeleton w-32 h-7 rounded-card mb-2" />
+          <div className="skeleton w-48 h-4 rounded-card" />
         </div>
         <div className="skeleton w-full h-12 rounded-xl" />
         <div className="space-y-4 pt-4">

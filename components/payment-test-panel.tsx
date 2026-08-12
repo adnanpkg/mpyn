@@ -92,7 +92,7 @@ export default function PaymentTestPanel({ userId, isPro = false, className = ''
               <p className="text-xs text-text capitalize">{label}: ₹{amount}</p>
               <div className="flex gap-1">
                 <motion.button
-                  className="flex-1 bg-text text-bg text-xs py-1 px-2 rounded-lg disabled:opacity-50 font-mono font-bold"
+                  className="flex-1 bg-text text-bg text-xs py-1 px-2 rounded-full disabled:opacity-50 font-mono font-bold"
                   onClick={() => runPaymentTest(amount, 'advance')}
                   disabled={testing}
                   {...pressScale}
@@ -100,7 +100,7 @@ export default function PaymentTestPanel({ userId, isPro = false, className = ''
                   ADV
                 </motion.button>
                 <motion.button
-                  className="flex-1 bg-text text-bg text-xs py-1 px-2 rounded-lg disabled:opacity-50 font-mono font-bold"
+                  className="flex-1 bg-text text-bg text-xs py-1 px-2 rounded-full disabled:opacity-50 font-mono font-bold"
                   onClick={() => runPaymentTest(amount, 'direct')}
                   disabled={testing}
                   {...pressScale}

@@ -195,7 +195,7 @@ export default function MessagesPage() {
               return (
                 <div key={msg._id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
                   <div
-                    className={`max-w-xs px-3 py-2 rounded-lg text-xs ${
+                    className={`max-w-xs px-3 py-2 rounded-[14px] text-xs ${
                       isMine
                         ? 'bg-text text-bg'
                         : 'bg-surface text-text border border-border'
@@ -213,7 +213,7 @@ export default function MessagesPage() {
         <div className="px-6 py-3 border-t border-border bg-bg">
           <div className="flex gap-2">
             <input
-              className="flex-1 bg-surface border border-border px-3 py-2 rounded-lg text-xs text-text outline-none"
+              className="flex-1 bg-surface border border-border px-3 py-2 rounded-[14px] text-xs text-text outline-none"
               placeholder="message..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -223,7 +223,7 @@ export default function MessagesPage() {
             {(showPayButton || showRequestButton) && (
               <button
                 onClick={handlePaymentClick}
-                className="px-3 py-2 bg-text text-bg rounded-lg text-xs font-bold hover:opacity-80"
+                className="px-3 py-2 bg-text text-bg rounded-full text-xs font-bold hover:opacity-80"
                 title={showPayButton ? 'Send payment request' : 'Request payment'}
               >
                 {showPayButton ? 'PAY' : 'REQ'}
@@ -232,7 +232,7 @@ export default function MessagesPage() {
             <button
               onClick={sendMessage}
               disabled={!input.trim() || sending}
-              className="px-4 py-2 bg-text text-bg rounded-lg text-xs font-bold disabled:opacity-50"
+              className="px-4 py-2 bg-text text-bg rounded-full text-xs font-bold disabled:opacity-50"
             >
               send
             </button>

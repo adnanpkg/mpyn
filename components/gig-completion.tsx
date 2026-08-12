@@ -112,14 +112,14 @@ export default function GigCompletion({
   if (isCompleted) {
     return (
       <div className="border-t border-border pt-4 space-y-3">
-        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+        <div className="bg-elevated border border-border rounded-card p-3">
           <div className="flex items-center gap-2 mb-2">
-            <CheckCircle size={16} className="text-green-600" />
-            <span className="font-heading font-bold text-sm text-green-800">
+            <CheckCircle size={16} className="text-text" />
+            <span className="font-heading font-bold text-sm text-text">
               gig completed ✳
             </span>
           </div>
-          <p className="text-xs text-green-700">
+          <p className="text-xs text-text">
             both parties confirmed completion. great work!
           </p>
         </div>
@@ -127,7 +127,7 @@ export default function GigCompletion({
         {/* Rating prompt */}
         {reviewInfo?.canReview && (
           <motion.button
-            className="w-full bg-yellow-400 text-black py-3 px-4 rounded-lg font-heading font-bold text-sm flex items-center justify-center gap-2"
+            className="w-full bg-text text-bg py-3 px-4 rounded-pill font-heading font-bold text-sm flex items-center justify-center gap-2"
             onClick={() => setShowRatingDialog(true)}
             {...pressScale}
           >
@@ -164,14 +164,14 @@ export default function GigCompletion({
       <div className="border-t border-border pt-4 space-y-3">
         {/* Status indicator */}
         {gig.status === 'pending_completion' && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+          <div className="bg-surface border border-border rounded-card p-3">
             <div className="flex items-center gap-2 mb-1">
-              <Clock size={14} className="text-yellow-600" />
-              <span className="font-heading font-bold text-sm text-yellow-800">
+              <Clock size={14} className="text-text" />
+              <span className="font-heading font-bold text-sm text-text">
                 pending mutual confirmation
               </span>
             </div>
-            <p className="text-xs text-yellow-700">
+            <p className="text-xs text-muted">
               {hasMarkedComplete 
                 ? 'waiting for partner to confirm completion...'
                 : partnerHasMarkedComplete
@@ -185,7 +185,7 @@ export default function GigCompletion({
         {/* Mark complete button */}
         {!hasMarkedComplete && (
           <motion.button
-            className="w-full bg-green-600 text-white py-3 px-4 rounded-lg font-heading font-bold text-sm disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full bg-text text-bg py-3 px-4 rounded-pill font-heading font-bold text-sm disabled:opacity-50 flex items-center justify-center gap-2"
             onClick={handleMarkComplete}
             disabled={markingComplete}
             {...pressScale}
@@ -203,10 +203,10 @@ export default function GigCompletion({
 
         {/* Already marked indicator */}
         {hasMarkedComplete && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <div className="bg-elevated border border-border rounded-card p-3">
             <div className="flex items-center gap-2">
-              <CheckCircle size={14} className="text-blue-600" />
-              <span className="text-sm text-blue-800">
+              <CheckCircle size={14} className="text-text" />
+              <span className="text-sm text-text">
                 ✓ you marked this gig complete
               </span>
             </div>

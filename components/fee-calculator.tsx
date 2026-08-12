@@ -15,7 +15,7 @@ export default function FeeCalculator({ amount, isPro = false, className = '' }:
   if (amount < 500) return null;
 
   return (
-    <div className={`bg-surface rounded-lg border border-border p-3 ${className}`}>
+    <div className={`bg-surface rounded-card border border-border p-3 ${className}`}>
       <div className="flex items-center gap-2 mb-2">
         <Info size={14} className="text-muted" />
         <span className="text-xs font-mono text-muted">fee breakdown</span>
