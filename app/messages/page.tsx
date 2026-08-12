@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -37,6 +37,15 @@ export default function MessagesPage() {
   const [conversations, setConversations] = useState<any[]>([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   // Load user and conversations
   useEffect(() => {
@@ -201,22 +210,25 @@ export default function MessagesPage() {
               <p className="text-muted text-xs">start a conversation</p>
             </div>
           ) : (
-            messages.map((msg) => {
-              const isMine = msg.senderId === currentUser?._id;
-              return (
-                <div key={msg._id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-                  <div
-                    className={`max-w-xs px-3 py-2 rounded-[14px] text-xs ${
-                      isMine
-                        ? 'bg-text text-bg'
-                        : 'bg-surface text-text border border-border'
-                    }`}
-                  >
-                    {msg.text}
+            <>
+              {messages.map((msg) => {
+                const isMine = msg.senderId === currentUser?._id;
+                return (
+                  <div key={msg._id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
+                    <div
+                      className={`max-w-xs px-3 py-2 rounded-[14px] text-xs ${
+                        isMine
+                          ? 'bg-text text-bg'
+                          : 'bg-surface text-text border border-border'
+                      }`}
+                    >
+                      {msg.text}
+                    </div>
                   </div>
-                </div>
-              );
-            })
+                );
+              })}
+              <div ref={messagesEndRef} />
+            </>
           )}
         </main>
 

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import { pressScale, haptic } from '@/lib/haptics';
 import { openProSubscriptionCheckout, type RazorpayResponse } from '@/lib/razorpay';
 
@@ -55,7 +56,7 @@ export default function ProUpgradeCard({
             
             haptic.success();
             onUpgradeSuccess?.();
-            alert('welcome to multiply. Pro ✻ zero fees await.');
+            alert('welcome to multiply. Pro * zero fees await.');
           } catch (error) {
             console.error('Subscription verification failed:', error);
             haptic.error();
@@ -90,7 +91,9 @@ export default function ProUpgradeCard({
         transition={{ type: 'spring', ...springConfig }}
       >
         <div className="text-center mb-3">
-          <p className="text-3xl mb-2">✻</p>
+          <div className="w-12 h-12 mx-auto mb-2 flex items-center justify-center">
+            <Image src="/icon.svg" alt="multiply" width={40} height={40} />
+          </div>
           <h3 className="font-heading font-bold text-text mb-1">
             multiply. Pro
           </h3>
@@ -100,9 +103,9 @@ export default function ProUpgradeCard({
         </div>
 
         <div className="space-y-2 text-xs text-muted mb-4">
-          <p>✻ zero platform fees</p>
-          <p>✻ verified badge</p>
-          <p>✻ top placement</p>
+          <p>* zero platform fees</p>
+          <p>* verified badge</p>
+          <p>* top placement</p>
         </div>
 
         <p className="text-center text-xs text-dim">
@@ -121,7 +124,9 @@ export default function ProUpgradeCard({
     >
       {/* Header */}
       <div className="mb-4">
-        <p className="text-4xl text-center mb-3">✻</p>
+        <div className="w-12 h-12 mx-auto mb-3 flex items-center justify-center">
+          <Image src="/icon.svg" alt="multiply pro" width={40} height={40} />
+        </div>
         <h3 className="font-heading font-bold text-text text-center mb-1">
           upgrade to multiply. Pro
         </h3>
@@ -133,15 +138,15 @@ export default function ProUpgradeCard({
       {/* Benefits */}
       <div className="space-y-2 mb-5 text-xs">
         <div className="flex items-center gap-3">
-          <span className="text-text font-bold">✻</span>
+          <span className="text-text font-bold">*</span>
           <span className="text-muted">zero platform fees (save 5% per gig)</span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-text font-bold">✻</span>
+          <span className="text-text font-bold">*</span>
           <span className="text-muted">verified badge on profile</span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-text font-bold">✻</span>
+          <span className="text-text font-bold">*</span>
           <span className="text-muted">top placement in search</span>
         </div>
       </div>

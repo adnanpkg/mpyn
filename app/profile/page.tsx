@@ -77,8 +77,8 @@ export default function ProfilePage() {
       <main className="px-6">
         {/* Avatar + name */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-20 h-20 rounded-full bg-elevated border border-border flex items-center justify-center text-3xl mb-4">
-            *
+          <div className="w-20 h-20 rounded-full bg-elevated border border-border flex items-center justify-center text-2xl font-heading font-bold mb-4">
+            {user?.username?.slice(0, 2).toUpperCase() || '?'}
           </div>
           <h2 className="font-heading font-bold text-xl text-text">
             @{user?.username}
