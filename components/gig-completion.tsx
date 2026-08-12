@@ -118,7 +118,7 @@ export default function GigCompletion({
           <div className="flex items-center gap-2 mb-2">
             <CheckCircle size={16} className="text-text" />
             <span className="font-heading font-bold text-sm text-text">
-              gig completed ✳
+              gig completed *
             </span>
           </div>
           <p className="text-xs text-text">

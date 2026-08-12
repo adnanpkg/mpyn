@@ -37,7 +37,7 @@ export default function FeeCalculator({ amount, isPro = false, className = '' }:
           <span className="text-muted">platform fee</span>
           <span className="font-mono text-text">
             {isPro ? (
-              <span className="text-green-600">₹0 (Pro benefit ✳)</span>
+              <span className="text-green-600">₹0 (Pro benefit *)</span>
             ) : (
               `₹${platformFee.toLocaleString()} (5%)`
             )}

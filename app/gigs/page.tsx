@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle2, Clock, Trash2, AlertCircle, PhoneCall } from 'lucide-react';
+import { CheckCircle2, Clock, Trash2, AlertCircle, PhoneCall, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import TabBar from '@/components/tab-bar';
 import PaymentStatus from '@/components/payment-status';
@@ -10,7 +10,7 @@ import GigCompletion from '@/components/gig-completion';
 import { getCurrentUser, type User } from '@/lib/auth';
 import { convex } from '@/lib/convex';
 import { api } from '@/convex/_generated/api';
-import { haptic, pressScale } from '@/lib/haptics';
+import { haptic, pressScale, spring } from '@/lib/haptics';
 
 interface Gig {
   _id: string;
@@ -99,7 +99,7 @@ export default function GigsPage() {
 
         {gigs.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <span className="text-4xl mb-3">✳</span>
+            <span className="text-4xl mb-3">*</span>
             <p className="font-heading font-bold text-base text-text mb-1">no active gigs</p>
             <p className="text-muted text-xs font-body max-w-[220px]">
               when you confirm deals, they'll be tracked here.
@@ -183,6 +183,15 @@ export default function GigsPage() {
           </div>
         )}
       </main>
+
+      <motion.button
+        className="fixed bottom-24 right-6 z-30 w-14 h-14 rounded-full bg-text text-bg flex items-center justify-center shadow-2xl border border-bg"
+        onClick={() => { haptic.tap(); router.push('/create-gig'); }}
+        {...pressScale}
+      >
+        <Plus size={26} strokeWidth={2.5} />
+      </motion.button>
+
       <TabBar />
     </div>
   );

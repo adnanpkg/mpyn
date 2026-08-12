@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Plus, Search, MapPin, Star } from 'lucide-react';
+import { Search, MapPin, Star } from 'lucide-react';
 import TabBar from '@/components/tab-bar';
 import { getCurrentUser, type User } from '@/lib/auth';
 import { convex } from '@/lib/convex';
@@ -96,17 +96,12 @@ export default function HomePage() {
   return (
     <div className="app-container bg-bg pb-24 min-h-screen relative">
       <header className="px-6 pt-14 pb-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="font-heading font-bold text-3xl text-text">multiply.</h1>
-            <p className="text-muted text-xs font-mono mt-0.5 flex items-center gap-1">
-              <MapPin size={12} />
-              {user?.city}, {user?.state}
-            </p>
-          </div>
-          <span className="text-xs font-mono px-3 py-1 rounded-full bg-surface border border-border text-muted">
-            {user?.role} mode
-          </span>
+        <div>
+          <h1 className="font-heading font-bold text-3xl text-text">multiply.</h1>
+          <p className="text-muted text-xs font-mono mt-0.5 flex items-center gap-1">
+            <MapPin size={12} />
+            {user?.city}, {user?.state}
+          </p>
         </div>
 
         <div className="mt-4 relative">
@@ -158,7 +153,7 @@ export default function HomePage() {
           </div>
         ) : filteredItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <span className="text-4xl mb-3">✳</span>
+            <span className="text-4xl mb-3">*</span>
             <p className="font-heading font-bold text-lg text-text mb-1">
               no {targetLabel} found
             </p>
@@ -199,7 +194,7 @@ export default function HomePage() {
                             {item.role === 'business' ? displayName : `@${displayName}`}
                           </h3>
                           {item.isPro && (
-                            <span className="text-text text-xs" title="Pro subscriber">✳</span>
+                            <span className="text-text text-xs" title="Pro subscriber">*</span>
                           )}
                         </div>
                         <p className="text-muted text-xs font-mono">
@@ -234,14 +229,6 @@ export default function HomePage() {
           </div>
         )}
       </main>
-
-      <motion.button
-        className="fixed bottom-24 right-6 z-30 w-14 h-14 rounded-full bg-text text-bg flex items-center justify-center shadow-2xl border border-bg"
-        onClick={() => { haptic.tap(); router.push('/create-gig'); }}
-        {...pressScale}
-      >
-        <Plus size={26} strokeWidth={2.5} />
-      </motion.button>
 
       <TabBar />
     </div>

@@ -129,7 +129,7 @@ export default function GigConfirmation({
             <span className="text-muted">platform fee</span>
             <span className="font-mono text-text">
               {businessIsPro ? (
-                <span className="text-text">₹0 — Pro member ✳</span>
+                <span className="text-text">₹0 — Pro member *</span>
               ) : (
                 `₹${platformFee.toLocaleString()}`
               )}

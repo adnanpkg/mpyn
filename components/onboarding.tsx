@@ -368,7 +368,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                     whileTap={{ scale: 0.96 }}
                     transition={spring.default}
                   >
-                    <span className="text-3xl">{r === 'creator' ? '✳' : '🏢'}</span>
+                    <span className="text-3xl">{r === 'creator' ? '*' : '🏢'}</span>
                     <div className="text-left">
                       <p className="font-heading font-bold text-lg capitalize">{r}</p>
                       <p className={`text-sm font-body ${role === r ? 'text-bg/70' : 'text-muted'}`}>
@@ -472,7 +472,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                   onClick={handleSignupComplete}
                   {...pressScale}
                 >
-                  {loading ? 'creating account...' : "let's go. ✳"}
+                  {loading ? 'creating account...' : "let's go. *"}
                 </motion.button>
               </div>
             </StepWrapper>

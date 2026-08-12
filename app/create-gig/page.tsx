@@ -127,7 +127,7 @@ export default function CreateGigPage() {
           onClick={handleCreate}
           {...pressScale}
         >
-          {loading ? 'creating...' : 'post gig. ✳'}
+          {loading ? 'creating...' : 'post gig. *'}
         </motion.button>
       </main>
     </div>

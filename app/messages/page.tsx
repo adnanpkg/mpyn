@@ -189,8 +189,8 @@ export default function MessagesPage() {
         <main className="flex-1 px-6 py-4 overflow-y-auto space-y-2">
           {messages.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-6xl mb-4">✻</p>
-              <p className="text-muted text-xs">no messages yet</p>
+              <p className="text-6xl mb-4">*</p>
+              <p className="text-muted text-xs">start a conversation</p>
             </div>
           ) : (
             messages.map((msg) => {
@@ -257,8 +257,8 @@ export default function MessagesPage() {
 
       <main className="px-6 space-y-3">
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <p className="text-6xl mb-4">✻</p>
-          <p className="font-heading font-bold text-base text-text mb-1">no messages yet</p>
+          <p className="text-6xl mb-4">*</p>
+          <p className="font-heading font-bold text-base text-text mb-1">no conversations yet</p>
           <p className="text-muted text-xs font-body max-w-[220px]">
             tap "chat & deal" on any profile to start a conversation.
           </p>

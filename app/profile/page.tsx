@@ -78,7 +78,7 @@ export default function ProfilePage() {
         {/* Avatar + name */}
         <div className="flex flex-col items-center mb-8">
           <div className="w-20 h-20 rounded-full bg-elevated border border-border flex items-center justify-center text-3xl mb-4">
-            ✳
+            *
           </div>
           <h2 className="font-heading font-bold text-xl text-text">
             @{user?.username}
@@ -88,7 +88,7 @@ export default function ProfilePage() {
           </p>
           {user?.isPro && (user as any)?.proExpiresAt && (user as any)?.proExpiresAt > Date.now() ? (
             <span className="mt-2 px-3 py-1 rounded-full bg-text text-bg text-xs font-mono font-bold">
-              ✳ pro
+              * pro
             </span>
           ) : user?.isPro ? (
             <span className="mt-2 px-3 py-1 rounded-full bg-gray-400 text-white text-xs font-mono font-bold">
