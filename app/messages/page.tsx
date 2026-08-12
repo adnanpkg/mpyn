@@ -42,20 +42,13 @@ interface Gig {
 }
 
 export default function MessagesPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const targetUserId = searchParams.get('user');
-
-  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [partnerInfo, setPartnerInfo] = useState<{ username?: string; role?: string; isPro?: boolean } | null>(null);
-  const [activeGig, setActiveGig] = useState<Gig | null>(null);
-  const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [confirmingGig, setConfirmingGig] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  return (
+    <div className="app-container bg-bg min-h-screen p-6">
+      <h1 className="font-heading font-bold text-3xl text-text mb-4">messages.</h1>
+      <p className="text-muted">Testing basic render</p>
+    </div>
+  );
+}
 
   const scrollToBottom = () =>
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
