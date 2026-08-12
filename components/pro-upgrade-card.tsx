@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import Image from 'next/image';
 import { pressScale, haptic } from '@/lib/haptics';
 import { openProSubscriptionCheckout, type RazorpayResponse } from '@/lib/razorpay';
 
@@ -91,9 +90,7 @@ export default function ProUpgradeCard({
         transition={{ type: 'spring', ...springConfig }}
       >
         <div className="text-center mb-3">
-          <div className="w-12 h-12 mx-auto mb-2 flex items-center justify-center">
-            <Image src="/icon.svg" alt="multiply" width={40} height={40} />
-          </div>
+          <img src="/icon.svg" alt="multiply" className="w-10 h-10 mx-auto mb-2" />
           <h3 className="font-heading font-bold text-text mb-1">
             multiply. Pro
           </h3>
@@ -124,9 +121,7 @@ export default function ProUpgradeCard({
     >
       {/* Header */}
       <div className="mb-4">
-        <div className="w-12 h-12 mx-auto mb-3 flex items-center justify-center">
-          <Image src="/icon.svg" alt="multiply pro" width={40} height={40} />
-        </div>
+        <img src="/icon.svg" alt="multiply pro" className="w-10 h-10 mx-auto mb-3" />
         <h3 className="font-heading font-bold text-text text-center mb-1">
           upgrade to multiply. Pro
         </h3>
