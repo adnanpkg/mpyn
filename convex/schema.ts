@@ -10,6 +10,7 @@ export default defineSchema({
     state: v.optional(v.string()),
     city: v.optional(v.string()),
     isPro: v.optional(v.boolean()),
+    proExpiresAt: v.optional(v.number()), // Pro subscription expiry timestamp
     ordersCount: v.optional(v.number()),
     rating: v.optional(v.number()),
     createdAt: v.number(),
@@ -65,16 +66,21 @@ export default defineSchema({
     title: v.string(),
     description: v.optional(v.string()),
     charge: v.number(),
-    cut: v.number(),
+    cut: v.number(), // Platform fee amount (kept as 'cut' for backward compatibility)
+    platformFee: v.optional(v.number()), // New explicit platform fee field
     status: v.union(
       v.literal('open'),
       v.literal('agreed'),
+      v.literal('payment_pending'),
+      v.literal('payment_done'),
       v.literal('in_progress'),
       v.literal('pending_completion'),
       v.literal('completed'),
       v.literal('disputed')
     ),
     paymentMode: v.optional(v.union(v.literal('advance'), v.literal('direct'))),
+    razorpayOrderId: v.optional(v.string()),
+    razorpayPaymentId: v.optional(v.string()),
     creatorMarkedComplete: v.optional(v.boolean()),
     businessMarkedComplete: v.optional(v.boolean()),
     createdAt: v.number(),
@@ -134,12 +140,26 @@ export default defineSchema({
     createdAt: v.number(),
   }).index('by_user', ['userId']),
 
-  // Subscriptions
+  // Pro subscriptions (₹190/month)
   subscriptions: defineTable({
     userId: v.id('users'),
-    razorpaySubId: v.optional(v.string()),
-    status: v.string(),
-    expiresAt: v.optional(v.number()),
+    razorpaySubId: v.string(), // Razorpay subscription ID
+    planId: v.string(), // Razorpay plan ID (multiply_pro_monthly)
+    status: v.union(
+      v.literal('active'),
+      v.literal('halted'),
+      v.literal('cancelled'),
+      v.literal('completed'),
+      v.literal('expired')
+    ),
+    currentStart: v.number(), // Current billing period start
+    currentEnd: v.number(), // Current billing period end  
+    nextBilling: v.optional(v.number()), // Next billing date
+    razorpayCustomerId: v.optional(v.string()),
     createdAt: v.number(),
-  }).index('by_user', ['userId']),
+    updatedAt: v.number(),
+  })
+    .index('by_user', ['userId'])
+    .index('by_razorpay_sub', ['razorpaySubId'])
+    .index('by_status', ['status']),
 });

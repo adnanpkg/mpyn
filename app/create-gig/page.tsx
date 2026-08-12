@@ -1,23 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
+import FeeCalculator from '@/components/fee-calculator';
 import { getCurrentUser } from '@/lib/auth';
 import { convex } from '@/lib/convex';
 import { api } from '@/convex/_generated/api';
 import { haptic, pressScale } from '@/lib/haptics';
 
-function calcCut(charge: number, isPro: boolean): number {
-  if (isPro) {
-    if (charge <= 2000) return 15;
-    if (charge <= 10000) return 28;
-    return 40;
-  }
-  if (charge <= 2000) return 19;
-  if (charge <= 10000) return 35;
-  return 50;
+function calcPlatformFee(charge: number, isPro: boolean): number {
+  if (isPro) return 0; // Pro users: zero platform fee
+  return Math.round(charge * 0.05); // Free users: 5% platform fee
 }
 
 export default function CreateGigPage() {
@@ -27,11 +22,16 @@ export default function CreateGigPage() {
   const [charge, setCharge] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [user, setUser] = useState<any>(null);
+
+  // Load user on mount
+  useEffect(() => {
+    getCurrentUser().then(setUser);
+  }, []);
 
   const chargeNum = parseInt(charge, 10);
   const isValid = title.trim().length > 0 && chargeNum >= 500;
-  const cut = isNaN(chargeNum) || chargeNum < 500 ? 0 : calcCut(chargeNum, false);
-  const earnings = chargeNum > 0 ? chargeNum - cut : 0;
+  const isPro = user?.isPro && user?.proExpiresAt && user?.proExpiresAt > Date.now();
 
   const handleCreate = async () => {
     if (!isValid) return;
@@ -46,13 +46,16 @@ export default function CreateGigPage() {
         title: title.trim(),
         description: description.trim() || undefined,
         charge: chargeNum,
-        isPro: u.isPro ?? false,
+        isPro: u.isPro && u.proExpiresAt && u.proExpiresAt > Date.now(),
       });
 
       haptic.success();
       router.replace('/gigs');
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'failed to create gig');
+      setLoading(false);
+    }
+  };
       haptic.error();
     } finally {
       setLoading(false);
@@ -113,20 +116,10 @@ export default function CreateGigPage() {
         </div>
 
         {chargeNum >= 500 && (
-          <div className="p-4 rounded-card bg-surface border border-border space-y-2">
-            <div className="flex justify-between text-xs font-mono text-muted">
-              <span>gig price</span>
-              <span className="text-text">₹{chargeNum}</span>
-            </div>
-            <div className="flex justify-between text-xs font-mono text-muted">
-              <span>multiply. cut</span>
-              <span className="text-text">−₹{cut}</span>
-            </div>
-            <div className="pt-2 border-t border-border flex justify-between text-sm font-mono font-bold text-text">
-              <span>you receive</span>
-              <span>₹{earnings}</span>
-            </div>
-          </div>
+          <FeeCalculator 
+            amount={chargeNum} 
+            isPro={isPro}
+          />
         )}
 
         {error && <p className="text-red-400 text-sm font-body">{error}</p>}

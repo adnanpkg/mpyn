@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { LogOut, Pencil, Star, Briefcase } from 'lucide-react';
 import TabBar from '@/components/tab-bar';
+import ProUpgradeCard from '@/components/pro-upgrade-card';
 import { getCurrentUser, signOut, type User } from '@/lib/auth';
 import { convex } from '@/lib/convex';
 import { api } from '@/convex/_generated/api';
@@ -85,11 +86,15 @@ export default function ProfilePage() {
           <p className="text-muted text-sm font-body mt-1 capitalize">
             {user?.role} · {user?.city}, {user?.state}
           </p>
-          {user?.isPro && (
+          {user?.isPro && user?.proExpiresAt && user?.proExpiresAt > Date.now() ? (
             <span className="mt-2 px-3 py-1 rounded-full bg-text text-bg text-xs font-mono font-bold">
               ✳ pro
             </span>
-          )}
+          ) : user?.isPro ? (
+            <span className="mt-2 px-3 py-1 rounded-full bg-gray-400 text-white text-xs font-mono font-bold">
+              pro expired
+            </span>
+          ) : null}
         </div>
 
         {/* Stats row */}
@@ -191,6 +196,18 @@ export default function ProfilePage() {
             )}
           </div>
         )}
+
+        {/* Pro subscription upgrade card */}
+        <ProUpgradeCard
+          userId={user?._id as string}
+          userEmail={user?.email as string}
+          isPro={user?.isPro}
+          proExpiresAt={user?.proExpiresAt}
+          onUpgradeSuccess={() => {
+            // Refresh user data after successful upgrade
+            window.location.reload();
+          }}
+        />
 
         {/* Edit profile button */}
         <motion.button

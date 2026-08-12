@@ -222,16 +222,17 @@ notifications (
 
 ### Free Users
 ```
-₹500 – ₹2,000    → ₹19 cut
-₹2,001 – ₹10,000 → ₹35 cut
-₹10,001+          → ₹50 cut (hard cap)
+5% of gig value (minimum ₹500)
+Examples:
+₹1,000 gig → ₹50 platform fee
+₹5,000 gig → ₹250 platform fee
+₹10,000 gig → ₹500 platform fee
 ```
 
 ### Pro Users (₹190/month subscribers)
 ```
-₹500 – ₹2,000    → ₹15 cut
-₹2,001 – ₹10,000 → ₹28 cut
-₹10,001+          → ₹40 cut (hard cap)
+0% platform fee - completely free!
+All gigs: ₹0 platform fee regardless of amount
 ```
 
 Minimum gig value: ₹500 — hard enforced everywhere, no exceptions

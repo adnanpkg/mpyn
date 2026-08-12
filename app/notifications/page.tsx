@@ -21,7 +21,10 @@ const iconForType = (type: string) => {
   if (type === 'gig_completed') return <CheckCircle2 size={16} />;
   if (type === 'new_message') return <MessageSquare size={16} />;
   if (type === 'gig_confirmed') return <Tag size={16} />;
-  if (type === 'review') return <Star size={16} />;
+  if (type === 'review' || type === 'review_received') return <Star size={16} className="text-yellow-500" />;
+  if (type === 'completion_pending') return <CheckCircle2 size={16} className="text-blue-600" />;
+  if (type.includes('payment')) return <CheckCircle2 size={16} className="text-green-600" />;
+  if (type.includes('subscription')) return <Star size={16} className="text-purple-600" />;
   return <Bell size={16} />;
 };
 

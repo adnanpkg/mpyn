@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { CheckCircle2, Clock, Trash2, AlertCircle, PhoneCall } from 'lucide-react';
 import { motion } from 'framer-motion';
 import TabBar from '@/components/tab-bar';
+import PaymentStatus from '@/components/payment-status';
+import GigCompletion from '@/components/gig-completion';
 import { getCurrentUser, type User } from '@/lib/auth';
 import { convex } from '@/lib/convex';
 import { api } from '@/convex/_generated/api';
@@ -46,41 +48,6 @@ export default function GigsPage() {
     };
     init();
   }, [router]);
-
-  const handleCreatorMarkComplete = async (gig: Gig) => {
-    if (!user) return;
-    haptic.heavy();
-    setError('');
-    try {
-      await convex.mutation(api.gigs.creatorMarkComplete, {
-        gigId: gig._id as any,
-        userId: user._id,
-      });
-      await loadGigs(user);
-      haptic.success();
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'failed to update');
-      haptic.error();
-    }
-  };
-
-  const handleBusinessMarkComplete = async (gig: Gig) => {
-    if (!user) return;
-    haptic.heavy();
-    setError('');
-    try {
-      await convex.mutation(api.gigs.businessMarkComplete, {
-        gigId: gig._id as any,
-        userId: user._id,
-      });
-      await loadGigs(user);
-      haptic.success();
-      navigator.vibrate?.([20, 30, 20, 30, 20]); // gig completed haptic
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'failed to update');
-      haptic.error();
-    }
-  };
 
   const handleDelete = async (gigId: string) => {
     if (!user) return;
@@ -152,16 +119,15 @@ export default function GigsPage() {
                   className="p-4 rounded-card bg-surface border border-border space-y-3"
                 >
                   <div className="flex items-start justify-between">
-                    <div>
+                    <div className="flex-1">
                       <h3 className="font-heading font-bold text-text text-base">{gig.title}</h3>
-                      <p className="text-muted text-xs font-mono mt-0.5 flex items-center gap-1">
-                        {isCompleted ? (
-                          <CheckCircle2 size={12} className="text-text" />
-                        ) : (
-                          <Clock size={12} />
-                        )}
-                        <span className="text-text font-bold">{gig.status.replace(/_/g, ' ')}</span>
-                      </p>
+                      <div className="mt-2">
+                        <PaymentStatus
+                          status={gig.status}
+                          amount={gig.charge}
+                          paymentMode={gig.paymentMode}
+                        />
+                      </div>
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       <span className="text-text font-mono font-bold text-sm bg-elevated px-2.5 py-1 rounded-full border border-border">
@@ -184,60 +150,23 @@ export default function GigsPage() {
                     <p className="text-muted text-xs font-body line-clamp-2">{gig.description}</p>
                   )}
 
-                  {/* Platform cut breakdown */}
+                  {/* Platform fee breakdown */}
                   {!isCompleted && (
                     <div className="text-[11px] font-mono text-dim flex gap-3">
-                      <span>multiply. cut: ₹{gig.cut}</span>
-                      <span>creator receives: ₹{gig.charge - gig.cut}</span>
+                      <span>platform fee: ₹{gig.cut || gig.platformFee || Math.round(gig.charge * 0.05)}</span>
+                      <span>creator receives: ₹{gig.charge - (gig.cut || gig.platformFee || Math.round(gig.charge * 0.05))}</span>
                     </div>
                   )}
 
-                  {/* Action buttons — role-dependent */}
-                  {!isCompleted && !isDisputed && (
-                    <div className="pt-2 border-t border-border flex items-center justify-between">
-                      {isCreator && (
-                        <>
-                          <span className="text-[11px] font-mono text-dim">
-                            {gig.creatorMarkedComplete ? 'posted ✓ — waiting for business' : 'mark when posted'}
-                          </span>
-                          <motion.button
-                            className="px-3 py-1.5 rounded-full bg-text text-bg font-mono text-xs font-bold disabled:opacity-40"
-                            disabled={!!gig.creatorMarkedComplete}
-                            onClick={() => handleCreatorMarkComplete(gig)}
-                            {...pressScale}
-                          >
-                            {gig.creatorMarkedComplete ? 'posted!' : "i've posted it."}
-                          </motion.button>
-                        </>
-                      )}
-
-                      {isBusiness && gig.creatorMarkedComplete && (
-                        <>
-                          <span className="text-[11px] font-mono text-dim">creator posted — confirm?</span>
-                          <motion.button
-                            className="px-3 py-1.5 rounded-full bg-text text-bg font-mono text-xs font-bold"
-                            onClick={() => handleBusinessMarkComplete(gig)}
-                            {...pressScale}
-                          >
-                            confirm completion.
-                          </motion.button>
-                        </>
-                      )}
-
-                      {isBusiness && !gig.creatorMarkedComplete && (
-                        <span className="text-[11px] font-mono text-dim">
-                          waiting for creator to post...
-                        </span>
-                      )}
-                    </div>
-                  )}
-
-                  {isCompleted && (
-                    <div className="pt-2 border-t border-border flex items-center gap-2">
-                      <CheckCircle2 size={14} className="text-text" />
-                      <span className="text-xs font-mono text-text">gig done. ✳</span>
-                    </div>
-                  )}
+                  {/* Gig completion flow */}
+                  <GigCompletion
+                    gig={gig}
+                    currentUserId={user?._id as string}
+                    onStatusUpdate={() => {
+                      // Refresh gigs after status update
+                      window.location.reload();
+                    }}
+                  />
 
                   <div className="pt-1 flex justify-end">
                     <a

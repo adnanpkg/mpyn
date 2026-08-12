@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Send, ArrowLeft, User, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import TabBar from '@/components/tab-bar';
+import GigConfirmation from '@/components/gig-confirmation';
+import GigCompletion from '@/components/gig-completion';
 import { getCurrentUser, type User as AuthUser } from '@/lib/auth';
 import { convex } from '@/lib/convex';
 import { api } from '@/convex/_generated/api';
@@ -29,6 +31,16 @@ interface Conversation {
   unreadCount: number;
 }
 
+interface Gig {
+  _id: string;
+  title: string;
+  charge: number;
+  status: string;
+  creatorId: string;
+  businessId?: string;
+  platformFee?: number;
+}
+
 export default function MessagesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -37,9 +49,11 @@ export default function MessagesPage() {
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [partnerInfo, setPartnerInfo] = useState<{ username?: string; role?: string } | null>(null);
+  const [partnerInfo, setPartnerInfo] = useState<{ username?: string; role?: string; isPro?: boolean } | null>(null);
+  const [activeGig, setActiveGig] = useState<Gig | null>(null);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(true);
+  const [confirmingGig, setConfirmingGig] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () =>
@@ -64,6 +78,22 @@ export default function MessagesPage() {
           userId: targetUserId as any,
         });
         setPartnerInfo(partner as any);
+
+        // Get active gig between users (either direction)
+        let gig = await convex.query(api.gigs.getActiveGigBetweenUsers, {
+          creatorId: u._id,
+          businessId: targetUserId as any,
+        });
+        
+        if (!gig) {
+          // Try reverse direction (partner as creator, current user as business)
+          gig = await convex.query(api.gigs.getActiveGigBetweenUsers, {
+            creatorId: targetUserId as any,
+            businessId: u._id,
+          });
+        }
+        
+        setActiveGig(gig as Gig | null);
 
         // Mark messages read
         await convex.mutation(api.messages.markRead, {
@@ -93,10 +123,19 @@ export default function MessagesPage() {
         partnerId: targetUserId as any,
       });
       setMessages(thread as Message[]);
+      
+      // Also refresh gig status
+      if (activeGig) {
+        const updatedGig = await convex.query(api.gigs.getById, {
+          gigId: activeGig._id as any,
+        });
+        setActiveGig(updatedGig as Gig | null);
+      }
+      
       scrollToBottom();
     }, 3000);
     return () => clearInterval(interval);
-  }, [targetUserId, currentUser]);
+  }, [targetUserId, currentUser, activeGig]);
 
   const sendMessage = async () => {
     if (!input.trim() || !currentUser || !targetUserId) return;
@@ -123,6 +162,62 @@ export default function MessagesPage() {
       });
     } catch (e) {
       console.error('send failed:', e);
+    }
+  };
+
+  const handlePaymentSuccess = async () => {
+    // Refresh gig status
+    if (activeGig && targetUserId) {
+      try {
+        const updatedGig = await convex.query(api.gigs.getById, {
+          gigId: activeGig._id as any,
+        });
+        setActiveGig(updatedGig as Gig | null);
+
+        // Refresh messages to show any new notifications
+        const thread = await convex.query(api.messages.getThread, {
+          userId: currentUser!._id,
+          partnerId: targetUserId as any,
+        });
+        setMessages(thread as Message[]);
+      } catch (error) {
+        console.error('Failed to refresh gig status:', error);
+      }
+    }
+  };
+    if (!activeGig || !currentUser || !targetUserId) return;
+    
+  const handleGigConfirm = async (paymentMode: 'advance' | 'direct') => {
+    if (!activeGig || !currentUser || !targetUserId) return;
+    
+    setConfirmingGig(true);
+    haptic.tap();
+
+    try {
+      await convex.mutation(api.gigs.confirm, {
+        gigId: activeGig._id as any,
+        businessId: currentUser._id,
+        paymentMode,
+      });
+
+      // Refresh active gig to show updated status
+      const updatedGig = await convex.query(api.gigs.getById, {
+        gigId: activeGig._id as any,
+      });
+      setActiveGig(updatedGig as Gig | null);
+
+      // Send confirmation message
+      await convex.mutation(api.messages.send, {
+        senderId: currentUser._id,
+        receiverId: targetUserId as any,
+        text: `✳ gig confirmed! payment mode: ${paymentMode}. proceeding to payment...`,
+      });
+
+    } catch (e) {
+      console.error('confirm gig failed:', e);
+      alert('failed to confirm gig. please try again.');
+    } finally {
+      setConfirmingGig(false);
     }
   };
 
@@ -181,6 +276,30 @@ export default function MessagesPage() {
           )}
           <div ref={messagesEndRef} />
         </main>
+
+        {/* Gig confirmation flow */}
+        {activeGig && (
+          <div className="px-6 pb-2 space-y-2">
+            <GigConfirmation
+              gig={activeGig}
+              currentUserId={currentUser?._id as string}
+              currentUserEmail={currentUser?.email as string}
+              businessIsPro={currentUser?.isPro && currentUser?.proExpiresAt && currentUser?.proExpiresAt > Date.now()}
+              onConfirm={handleGigConfirm}
+              onPaymentSuccess={handlePaymentSuccess}
+              loading={confirmingGig}
+            />
+            
+            {/* Show completion controls for in-progress and completed gigs */}
+            {(['in_progress', 'pending_completion', 'completed'].includes(activeGig.status)) && (
+              <GigCompletion
+                gig={activeGig}
+                currentUserId={currentUser?._id as string}
+                onStatusUpdate={handlePaymentSuccess} // Reuse the refresh function
+              />
+            )}
+          </div>
+        )}
 
         <div className="fixed bottom-0 left-0 right-0 px-6 pb-6 pt-2 bg-bg/90 backdrop-blur max-w-app mx-auto">
           <div className="flex items-center gap-2 bg-surface p-2 rounded-full border border-border">
