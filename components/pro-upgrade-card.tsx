@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Crown, Check, Loader2, Star, TrendingUp } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { pressScale } from '@/lib/haptics';
+import { pressScale, haptic } from '@/lib/haptics';
 import { openProSubscriptionCheckout, type RazorpayResponse } from '@/lib/razorpay';
 
 interface ProUpgradeCardProps {
@@ -13,6 +13,8 @@ interface ProUpgradeCardProps {
   proExpiresAt?: number;
   onUpgradeSuccess?: () => void;
 }
+
+const springConfig = { stiffness: 400, damping: 30 };
 
 export default function ProUpgradeCard({
   userId,
@@ -26,6 +28,7 @@ export default function ProUpgradeCard({
   const isProActive = isPro && proExpiresAt && proExpiresAt > Date.now();
 
   const handleUpgrade = async () => {
+    haptic.tap();
     setUpgrading(true);
 
     try {
@@ -34,7 +37,6 @@ export default function ProUpgradeCard({
         userEmail,
         async (response: RazorpayResponse) => {
           try {
-            // For subscriptions, we need a different verification approach
             const verifyResponse = await fetch('/api/razorpay/verify-payment', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -51,136 +53,144 @@ export default function ProUpgradeCard({
               throw new Error('Subscription verification failed');
             }
             
-            // Call success callback
+            haptic.success();
             onUpgradeSuccess?.();
-            
-            alert('Welcome to multiply. Pro! ✳ Enjoy zero platform fees.');
+            alert('welcome to multiply. Pro ✻ zero fees await.');
           } catch (error) {
             console.error('Subscription verification failed:', error);
-            alert('Subscription verification failed. Please contact support.');
+            haptic.error();
+            alert('verification failed. please try again.');
           } finally {
             setUpgrading(false);
           }
         },
         (error: any) => {
           console.error('Subscription payment failed:', error);
-          alert('Payment failed. Please try again.');
+          haptic.error();
+          alert('payment failed. please try again.');
           setUpgrading(false);
         }
       );
     } catch (error) {
       console.error('Subscription initialization failed:', error);
-      alert('Failed to initialize subscription. Please try again.');
+      haptic.error();
+      alert('failed to initialize. please try again.');
       setUpgrading(false);
     }
   };
 
   if (isProActive) {
+    const daysLeft = Math.ceil((proExpiresAt - Date.now()) / (1000 * 60 * 60 * 24));
+    
     return (
-      <div className="bg-gradient-to-br from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-4 mb-6">
-        <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center flex-shrink-0">
-            <Crown size={20} className="text-white" />
-          </div>
-          <div className="flex-1">
-            <h3 className="font-heading font-bold text-sm text-purple-800 mb-1">
-              multiply. Pro Active ✳
-            </h3>
-            <p className="text-xs text-purple-600 mb-2">
-              Enjoying zero platform fees and Pro benefits
-            </p>
-            <p className="text-xs text-purple-500">
-              Expires: {new Date(proExpiresAt).toLocaleDateString('en-IN', {
-                day: 'numeric',
-                month: 'short',
-                year: 'numeric',
-              })}
-            </p>
-          </div>
+      <motion.div 
+        className="border border-border rounded-[20px] p-4 mb-6 bg-surface"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: 'spring', ...springConfig }}
+      >
+        <div className="text-center mb-3">
+          <p className="text-3xl mb-2">✻</p>
+          <h3 className="font-heading font-bold text-text mb-1">
+            multiply. Pro
+          </h3>
+          <p className="text-dim text-xs font-mono">
+            {daysLeft} days remaining
+          </p>
         </div>
-      </div>
+
+        <div className="space-y-2 text-xs text-muted mb-4">
+          <p>✻ zero platform fees</p>
+          <p>✻ verified badge</p>
+          <p>✻ top placement</p>
+        </div>
+
+        <p className="text-center text-xs text-dim">
+          renews {new Date(proExpiresAt).toLocaleDateString('en-IN')}
+        </p>
+      </motion.div>
     );
   }
 
   return (
-    <div className="bg-gradient-to-br from-gray-50 to-purple-50 border border-gray-200 rounded-lg p-4 mb-6">
-      <div className="flex items-start gap-3 mb-4">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-400 to-purple-400 flex items-center justify-center flex-shrink-0">
-          <Crown size={20} className="text-white" />
+    <motion.div 
+      className="border border-border rounded-[20px] p-5 mb-6 bg-elevated"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: 'spring', ...springConfig }}
+    >
+      {/* Header */}
+      <div className="mb-4">
+        <p className="text-4xl text-center mb-3">✻</p>
+        <h3 className="font-heading font-bold text-text text-center mb-1">
+          upgrade to multiply. Pro
+        </h3>
+        <p className="text-muted text-xs text-center font-mono">
+          ₹190 / month
+        </p>
+      </div>
+
+      {/* Benefits */}
+      <div className="space-y-2 mb-5 text-xs">
+        <div className="flex items-center gap-3">
+          <span className="text-text font-bold">✻</span>
+          <span className="text-muted">zero platform fees (save 5% per gig)</span>
         </div>
-        <div className="flex-1">
-          <h3 className="font-heading font-bold text-base text-text mb-1">
-            upgrade to multiply. Pro
-          </h3>
-          <p className="text-xs text-muted mb-3">
-            ₹190/month — unlock Pro benefits and save on every gig
-          </p>
+        <div className="flex items-center gap-3">
+          <span className="text-text font-bold">✻</span>
+          <span className="text-muted">verified badge on profile</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-text font-bold">✻</span>
+          <span className="text-muted">top placement in search</span>
         </div>
       </div>
 
-      {/* Benefits list */}
-      <div className="space-y-2 mb-4">
-        <div className="flex items-center gap-2">
-          <Check size={14} className="text-green-600 flex-shrink-0" />
-          <span className="text-xs text-text">Zero platform fees (save 5% on every gig)</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Star size={14} className="text-yellow-500 flex-shrink-0" />
-          <span className="text-xs text-text">Verified ✳ badge on profile</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <TrendingUp size={14} className="text-blue-600 flex-shrink-0" />
-          <span className="text-xs text-text">Top placement in search results</span>
-        </div>
-      </div>
-
-      {/* Savings calculator */}
-      <div className="bg-white/70 rounded-lg p-3 mb-4 border border-gray-100">
-        <h4 className="font-heading font-bold text-xs text-text mb-2">potential savings</h4>
-        <div className="space-y-1">
-          <div className="flex justify-between text-xs">
-            <span className="text-muted">₹1,000 gig</span>
-            <span className="font-mono text-green-600">save ₹50</span>
+      {/* Savings breakdown */}
+      <div className="bg-surface border border-border rounded-[14px] p-3 mb-5">
+        <p className="font-heading font-bold text-xs text-text mb-3">
+          your savings
+        </p>
+        <div className="space-y-2 text-xs font-mono">
+          <div className="flex justify-between">
+            <span className="text-dim">₹1,000 gig</span>
+            <span className="text-text">save ₹50</span>
           </div>
-          <div className="flex justify-between text-xs">
-            <span className="text-muted">₹5,000 gig</span>
-            <span className="font-mono text-green-600">save ₹250</span>
+          <div className="flex justify-between">
+            <span className="text-dim">₹5,000 gig</span>
+            <span className="text-text">save ₹250</span>
           </div>
-          <div className="flex justify-between text-xs">
-            <span className="text-muted">₹10,000 gig</span>
-            <span className="font-mono text-green-600">save ₹500</span>
+          <div className="flex justify-between">
+            <span className="text-dim">₹10,000 gig</span>
+            <span className="text-text">save ₹500</span>
           </div>
-        </div>
-        <div className="border-t border-gray-200 pt-2 mt-2">
-          <p className="text-xs text-muted">
-            Pro pays for itself with just ₹3,800 in gigs per month
-          </p>
+          <div className="border-t border-border pt-2 mt-2">
+            <p className="text-dim">pro pays for itself at ₹3,800/month in gigs</p>
+          </div>
         </div>
       </div>
 
       {/* Upgrade button */}
       <motion.button
-        className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 px-4 rounded-lg font-heading font-bold text-sm disabled:opacity-50 flex items-center justify-center gap-2"
+        className="w-full bg-text text-bg py-3 px-4 rounded-full font-heading font-bold text-sm disabled:opacity-50 flex items-center justify-center gap-2"
         onClick={handleUpgrade}
         disabled={upgrading}
+        whileTap={{ scale: 0.96 }}
         {...pressScale}
       >
         {upgrading ? (
           <>
-            <Loader2 size={16} className="animate-spin" />
+            <Loader2 size={14} className="animate-spin" />
             upgrading...
           </>
         ) : (
-          <>
-            <Crown size={16} />
-            upgrade to Pro — ₹190/month
-          </>
+          'upgrade now'
         )}
       </motion.button>
 
-      <p className="text-xs text-center text-muted mt-2">
+      <p className="text-xs text-center text-dim mt-3">
         cancel anytime • benefits end at billing cycle
       </p>
-    </div>
+    </motion.div>
   );
 }
