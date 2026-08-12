@@ -225,7 +225,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                   onChange={(e) => setEmail(e.target.value)}
                   autoFocus
                 />
-                {error && <p className="text-red-400 text-xs font-mono mb-3">{error}</p>}
+                {error && <p style={{ color: '#FF3B30' }} className="text-xs font-mono mb-3">{error}</p>}
                 <motion.button
                   className="pill-btn-primary w-full disabled:opacity-40"
                   disabled={!email.trim() || loading}
@@ -399,7 +399,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                   onChange={(e) => setEmail(e.target.value)}
                   autoFocus
                 />
-                {error && <p className="text-red-400 text-xs font-mono mb-3">{error}</p>}
+                {error && <p style={{ color: '#FF3B30' }} className="text-xs font-mono mb-3">{error}</p>}
                 <motion.button
                   className="pill-btn-primary w-full disabled:opacity-40"
                   disabled={!email.trim() || loading}
@@ -465,7 +465,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                   }
                   autoFocus
                 />
-                {error && <p className="text-red-400 text-xs font-mono mb-3">{error}</p>}
+                {error && <p style={{ color: '#FF3B30' }} className="text-xs font-mono mb-3">{error}</p>}
                 <motion.button
                   className="pill-btn-primary w-full disabled:opacity-40"
                   disabled={!username.trim() || loading}

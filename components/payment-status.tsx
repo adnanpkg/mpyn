@@ -21,44 +21,44 @@ export default function PaymentStatus({
         return {
           icon: <Clock size={14} className="text-muted" />,
           text: 'awaiting confirmation',
-          bgColor: 'bg-gray-50 border-gray-200',
-          textColor: 'text-gray-600',
+          bgColor: 'bg-surface border-border',
+          textColor: 'text-muted',
         };
       case 'agreed':
         return {
-          icon: <AlertCircle size={14} className="text-yellow-600" />,
+          icon: <AlertCircle size={14} className="text-text" />,
           text: 'awaiting payment',
-          bgColor: 'bg-yellow-50 border-yellow-200',
-          textColor: 'text-yellow-700',
+          bgColor: 'bg-elevated border-border',
+          textColor: 'text-text',
         };
       case 'payment_pending':
         return {
-          icon: <Clock size={14} className="text-blue-600" />,
+          icon: <Clock size={14} className="text-muted" />,
           text: 'payment processing',
-          bgColor: 'bg-blue-50 border-blue-200',
-          textColor: 'text-blue-700',
+          bgColor: 'bg-surface border-border',
+          textColor: 'text-muted',
         };
       case 'payment_done':
       case 'in_progress':
         return {
-          icon: <CheckCircle size={14} className="text-green-600" />,
+          icon: <CheckCircle size={14} className="text-text" />,
           text: 'payment completed',
-          bgColor: 'bg-green-50 border-green-200',
-          textColor: 'text-green-700',
+          bgColor: 'bg-elevated border-border',
+          textColor: 'text-text',
         };
       case 'completed':
         return {
-          icon: <CheckCircle size={14} className="text-green-600" />,
+          icon: <CheckCircle size={14} className="text-text" />,
           text: 'gig completed',
-          bgColor: 'bg-green-50 border-green-200',
-          textColor: 'text-green-700',
+          bgColor: 'bg-elevated border-border',
+          textColor: 'text-text',
         };
       case 'disputed':
         return {
-          icon: <XCircle size={14} className="text-red-600" />,
+          icon: <XCircle size={14} className="text-dim" />,
           text: 'disputed',
-          bgColor: 'bg-red-50 border-red-200',
-          textColor: 'text-red-700',
+          bgColor: 'bg-surface border-border',
+          textColor: 'text-dim',
         };
       default:
         return {

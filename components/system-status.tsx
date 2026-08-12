@@ -153,26 +153,26 @@ export default function SystemStatus({ className = '' }: StatusCheckProps) {
   const getStatusIcon = (status: SystemCheck['status']) => {
     switch (status) {
       case 'checking':
-        return <Loader2 size={16} className="animate-spin text-blue-500" />;
+        return <Loader2 size={16} className="animate-spin text-muted" />;
       case 'pass':
-        return <CheckCircle size={16} className="text-green-500" />;
+        return <CheckCircle size={16} className="text-text" />;
       case 'fail':
-        return <XCircle size={16} className="text-red-500" />;
+        return <XCircle size={16} className="text-text" />;
       case 'warning':
-        return <AlertCircle size={16} className="text-yellow-500" />;
+        return <AlertCircle size={16} className="text-text" />;
     }
   };
 
   const getStatusColor = (status: SystemCheck['status']) => {
     switch (status) {
       case 'checking':
-        return 'bg-blue-50 border-blue-200';
+        return 'bg-surface border-border';
       case 'pass':
-        return 'bg-green-50 border-green-200';
+        return 'bg-elevated border-border';
       case 'fail':
-        return 'bg-red-50 border-red-200';
+        return 'bg-surface border-border';
       case 'warning':
-        return 'bg-yellow-50 border-yellow-200';
+        return 'bg-surface border-border';
     }
   };
 
@@ -182,7 +182,7 @@ export default function SystemStatus({ className = '' }: StatusCheckProps) {
   }
 
   return (
-    <div className={`border rounded-lg p-4 ${className}`}>
+    <div className={`border border-border rounded-[14px] p-4 bg-surface ${className}`}>
       <div className="flex items-center justify-between mb-3">
         <h3 className="font-heading font-bold text-sm">System Status</h3>
         <button
@@ -207,9 +207,9 @@ export default function SystemStatus({ className = '' }: StatusCheckProps) {
               {getStatusIcon(check.status)}
               <span className="font-medium text-sm">{check.name}</span>
             </div>
-            <p className="text-xs text-gray-600">{check.message}</p>
+            <p className="text-xs text-muted">{check.message}</p>
             {check.details && (
-              <p className="text-xs text-gray-500 mt-1">{check.details}</p>
+              <p className="text-xs text-dim mt-1">{check.details}</p>
             )}
           </motion.div>
         ))}
@@ -222,8 +222,8 @@ export default function SystemStatus({ className = '' }: StatusCheckProps) {
         </div>
       )}
 
-      <div className="mt-4 p-2 bg-gray-50 rounded text-xs text-gray-600">
-        💡 This panel only appears in development mode
+      <div className="mt-4 p-2 bg-surface rounded-[14px] border border-border text-xs text-muted">
+        ⧚ This panel only appears in development mode
       </div>
     </div>
   );

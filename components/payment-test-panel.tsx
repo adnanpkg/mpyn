@@ -75,24 +75,24 @@ export default function PaymentTestPanel({ userId, isPro = false, className = ''
   };
 
   return (
-    <div className={`bg-yellow-50 border border-yellow-200 rounded-lg p-4 ${className}`}>
+    <div className={`bg-elevated border border-border rounded-[14px] p-4 ${className}`}>
       <div className="flex items-center gap-2 mb-3">
-        <Play size={16} className="text-yellow-600" />
-        <span className="font-heading font-bold text-sm text-yellow-800">
-          Payment Testing Panel {isPro && <Crown size={14} className="inline text-purple-600" />}
+        <Play size={16} className="text-text" />
+        <span className="font-heading font-bold text-sm text-text">
+          Payment Testing Panel {isPro && <Crown size={14} className="inline text-text" />}
         </span>
       </div>
 
       <div className="space-y-2 mb-4">
-        <h4 className="text-xs font-mono text-yellow-700">Quick Tests</h4>
+        <h4 className="text-xs font-mono text-muted">Quick Tests</h4>
         
         <div className="grid grid-cols-2 gap-2">
           {Object.entries(TEST_AMOUNTS).map(([label, amount]) => (
             <div key={label} className="space-y-1">
-              <p className="text-xs text-yellow-700 capitalize">{label}: ₹{amount}</p>
+              <p className="text-xs text-text capitalize">{label}: ₹{amount}</p>
               <div className="flex gap-1">
                 <motion.button
-                  className="flex-1 bg-blue-500 text-white text-xs py-1 px-2 rounded disabled:opacity-50"
+                  className="flex-1 bg-text text-bg text-xs py-1 px-2 rounded-lg disabled:opacity-50 font-mono font-bold"
                   onClick={() => runPaymentTest(amount, 'advance')}
                   disabled={testing}
                   {...pressScale}
@@ -100,7 +100,7 @@ export default function PaymentTestPanel({ userId, isPro = false, className = ''
                   ADV
                 </motion.button>
                 <motion.button
-                  className="flex-1 bg-green-500 text-white text-xs py-1 px-2 rounded disabled:opacity-50"
+                  className="flex-1 bg-text text-bg text-xs py-1 px-2 rounded-lg disabled:opacity-50 font-mono font-bold"
                   onClick={() => runPaymentTest(amount, 'direct')}
                   disabled={testing}
                   {...pressScale}
@@ -114,28 +114,28 @@ export default function PaymentTestPanel({ userId, isPro = false, className = ''
       </div>
 
       {/* Test Cards Reference */}
-      <div className="bg-white rounded p-2 mb-3">
-        <h4 className="text-xs font-mono text-gray-600 mb-1">Test Cards</h4>
-        <div className="text-xs space-y-1">
-          <div>✅ Success: {TEST_CARDS.success.number}</div>
-          <div>❌ Failure: {TEST_CARDS.failure.number}</div>
+      <div className="bg-surface rounded-[14px] p-2 mb-3 border border-border">
+        <h4 className="text-xs font-mono text-muted mb-1">Test Cards</h4>
+        <div className="text-xs space-y-1 text-text">
+          <div>✓ Success: {TEST_CARDS.success.number}</div>
+          <div>✗ Failure: {TEST_CARDS.failure.number}</div>
         </div>
       </div>
 
       {/* Test Results */}
       {testResults.length > 0 && (
-        <div className="bg-white rounded p-2 max-h-32 overflow-y-auto">
-          <h4 className="text-xs font-mono text-gray-600 mb-1">Results</h4>
+        <div className="bg-surface rounded-[14px] p-2 max-h-32 overflow-y-auto border border-border">
+          <h4 className="text-xs font-mono text-muted mb-1">Results</h4>
           {testResults.slice(0, 5).map((result, i) => (
-            <div key={i} className="text-xs flex items-center justify-between py-1 border-b border-gray-100 last:border-0">
-              <span className="text-gray-600">{result.timestamp}</span>
+            <div key={i} className="text-xs flex items-center justify-between py-1 border-b border-border last:border-0 text-text">
+              <span className="text-muted">{result.timestamp}</span>
               <div className="flex items-center gap-1">
                 <span>₹{result.amount}</span>
-                <span className="text-gray-400">{result.paymentMode}</span>
+                <span className="text-dim">{result.paymentMode}</span>
                 {result.status === 'success' ? (
-                  <CheckCircle size={12} className="text-green-500" />
+                  <CheckCircle size={12} className="text-text" />
                 ) : (
-                  <XCircle size={12} className="text-red-500" />
+                  <XCircle size={12} className="text-text" />
                 )}
               </div>
             </div>
@@ -144,8 +144,8 @@ export default function PaymentTestPanel({ userId, isPro = false, className = ''
       )}
 
       {testing && (
-        <div className="text-xs text-yellow-600 text-center py-2">
-          Running test... 🧪
+        <div className="text-xs text-muted text-center py-2">
+          Running test... ⧚
         </div>
       )}
     </div>

@@ -113,7 +113,7 @@ export default function PaymentHistory({
       <div className="grid grid-cols-2 gap-3">
         <div className="bg-surface rounded-lg p-3 border border-border">
           <div className="flex items-center gap-2 mb-1">
-            <TrendingUp size={14} className="text-green-600" />
+            <TrendingUp size={14} className="text-text" />
             <span className="text-xs font-mono text-muted">earned</span>
           </div>
           <p className="font-heading font-bold text-text">₹{stats.totalEarned.toLocaleString()}</p>
@@ -121,7 +121,7 @@ export default function PaymentHistory({
         
         <div className="bg-surface rounded-lg p-3 border border-border">
           <div className="flex items-center gap-2 mb-1">
-            <TrendingDown size={14} className="text-red-600" />
+            <TrendingDown size={14} className="text-dim" />
             <span className="text-xs font-mono text-muted">spent</span>
           </div>
           <p className="font-heading font-bold text-text">₹{stats.totalSpent.toLocaleString()}</p>
