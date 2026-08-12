@@ -1,92 +1,124 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Bell, CheckCircle2, MessageSquare, Tag } from 'lucide-react';
-import TabBar from '@/components/tab-bar';
-import { supabase } from '@/lib/supabase';
+import { Bell, CheckCircle2, MessageSquare, Tag, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
+import TabBar from '@/components/tab-bar';
+import { getCurrentUser } from '@/lib/auth';
+import { convex } from '@/lib/convex';
+import { api } from '@/convex/_generated/api';
+import { haptic, pressScale } from '@/lib/haptics';
 
-interface NotificationItem {
-  id: string;
-  type: 'gig_created' | 'status_update' | 'message';
-  title: string;
-  body: string;
-  created_at: string;
+interface Notification {
+  _id: string;
+  type: string;
+  content: string;
+  read?: boolean;
+  createdAt: number;
 }
 
+const iconForType = (type: string) => {
+  if (type === 'gig_completed') return <CheckCircle2 size={16} />;
+  if (type === 'new_message') return <MessageSquare size={16} />;
+  if (type === 'gig_confirmed') return <Tag size={16} />;
+  if (type === 'review') return <Star size={16} />;
+  return <Bell size={16} />;
+};
+
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchNotifications = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Build real-time activity feed from user's active gigs & messages
-      const { data: gigs } = await supabase
-        .from('gigs')
-        .select('id, title, status, created_at')
-        .or(`creator_id.eq.${user.id},business_id.eq.${user.id}`)
-        .order('created_at', { ascending: false });
-
-      const items: NotificationItem[] = (gigs || []).map((g) => ({
-        id: g.id,
-        type: g.status === 'completed' ? 'status_update' : 'gig_created',
-        title: g.status === 'completed' ? 'Gig Completed! 🎉' : 'Active Gig Tracked',
-        body: `"${g.title}" status is currently ${g.status.replace('_', ' ')}.`,
-        created_at: g.created_at,
-      }));
-
-      setNotifications(items);
+    const load = async () => {
+      const u = await getCurrentUser();
+      if (!u) return;
+      setUserId(u._id as string);
+      const notifs = await convex.query(api.notifications.getForUser, { userId: u._id });
+      setNotifications(notifs as Notification[]);
       setLoading(false);
     };
-
-    fetchNotifications();
+    load();
   }, []);
+
+  const markAllRead = async () => {
+    if (!userId) return;
+    haptic.tap();
+    await convex.mutation(api.notifications.markAllRead, { userId: userId as any });
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
     <div className="app-container bg-bg pb-24 min-h-screen">
-      <header className="px-6 pt-14 pb-4">
-        <h1 className="font-heading font-bold text-3xl text-text">notifications.</h1>
-        <p className="text-muted text-xs font-mono">order activity & deal updates</p>
+      <header className="px-6 pt-14 pb-4 flex items-center justify-between">
+        <div>
+          <h1 className="font-heading font-bold text-3xl text-text">notifications.</h1>
+          <p className="text-muted text-xs font-mono">deal updates & alerts</p>
+        </div>
+        {unreadCount > 0 && (
+          <motion.button
+            className="text-xs font-mono text-muted hover:text-text"
+            onClick={markAllRead}
+            {...pressScale}
+          >
+            mark all read
+          </motion.button>
+        )}
       </header>
 
       <main className="px-6">
         {loading ? (
           <div className="space-y-3">
-            <div className="skeleton w-full h-16 rounded-card" />
-            <div className="skeleton w-full h-16 rounded-card" />
-            <div className="skeleton w-full h-16 rounded-card" />
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="skeleton w-full h-16 rounded-card" />
+            ))}
           </div>
         ) : notifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <Bell size={32} className="text-muted mb-3" />
             <p className="font-heading font-bold text-base text-text mb-1">all caught up!</p>
             <p className="text-muted text-xs font-body max-w-[220px]">
-              when gigs are created or status updates change, you&apos;ll be notified here.
+              gig updates, messages, and deal confirmations show up here.
             </p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {notifications.map((notif, i) => (
               <motion.div
-                key={notif.id || i}
-                initial={{ opacity: 0, y: 10 }}
+                key={notif._id}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-4 rounded-card bg-surface border border-border flex items-start gap-3"
+                transition={{ delay: i * 0.02 }}
+                className={`p-4 rounded-card border flex items-start gap-3 transition-colors ${
+                  notif.read
+                    ? 'bg-surface border-border'
+                    : 'bg-elevated border-border'
+                }`}
               >
-                <div className="p-2 rounded-full bg-elevated border border-border text-text mt-0.5">
-                  {notif.type === 'status_update' ? (
-                    <CheckCircle2 size={16} />
-                  ) : (
-                    <Tag size={16} />
-                  )}
+                <div className={`p-2 rounded-full border flex-shrink-0 mt-0.5 ${
+                  notif.read ? 'bg-surface border-border text-muted' : 'bg-elevated border-border text-text'
+                }`}>
+                  {iconForType(notif.type)}
                 </div>
-                <div>
-                  <h4 className="font-heading font-bold text-xs text-text">{notif.title}</h4>
-                  <p className="text-muted text-xs font-body mt-0.5">{notif.body}</p>
+                <div className="flex-1">
+                  <p className={`text-xs font-body leading-relaxed ${notif.read ? 'text-muted' : 'text-text'}`}>
+                    {notif.content}
+                  </p>
+                  <p className="text-[10px] font-mono text-dim mt-1">
+                    {new Date(notif.createdAt).toLocaleDateString('en-IN', {
+                      day: 'numeric',
+                      month: 'short',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </p>
                 </div>
+                {!notif.read && (
+                  <div className="w-2 h-2 rounded-full bg-text flex-shrink-0 mt-1" />
+                )}
               </motion.div>
             ))}
           </div>
@@ -96,4 +128,3 @@ export default function NotificationsPage() {
     </div>
   );
 }
-

@@ -4,34 +4,35 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { haptic, spring, pressScale } from '@/lib/haptics';
 import { CONTENT_CATEGORIES } from '@/lib/categories';
-import { supabase } from '@/lib/supabase';
+import { getCurrentUser } from '@/lib/auth';
+import { convex } from '@/lib/convex';
+import { api } from '@/convex/_generated/api';
 
 export interface CreatorProfileData {
-  instagram_handle: string;
-  bio: string;
-  content_categories: string[];
-  gig_charge: number;
-  portfolio_url: string;
+  instagramHandle?: string;
+  bio?: string;
+  contentCategories?: string[];
+  gigCharge?: number;
+  portfolioUrl?: string;
 }
 
-interface CreatorProfileFormProps {
+interface Props {
   initial?: Partial<CreatorProfileData>;
   onSave: () => void;
   submitLabel?: string;
 }
 
-export default function CreatorProfileForm({
-  initial,
-  onSave,
-  submitLabel = 'save profile',
-}: CreatorProfileFormProps) {
-  const [instagram, setInstagram] = useState(initial?.instagram_handle ?? '');
+export default function CreatorProfileForm({ initial, onSave, submitLabel = 'save profile' }: Props) {
+  const [instagram, setInstagram] = useState(initial?.instagramHandle ?? '');
   const [bio, setBio] = useState(initial?.bio ?? '');
-  const [categories, setCategories] = useState<string[]>(initial?.content_categories ?? []);
-  const [gigCharge, setGigCharge] = useState(String(initial?.gig_charge ?? ''));
-  const [portfolioUrl, setPortfolioUrl] = useState(initial?.portfolio_url ?? '');
+  const [categories, setCategories] = useState<string[]>(initial?.contentCategories ?? []);
+  const [gigCharge, setGigCharge] = useState(String(initial?.gigCharge ?? ''));
+  const [portfolioUrl, setPortfolioUrl] = useState(initial?.portfolioUrl ?? '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const charge = parseInt(gigCharge, 10);
+  const isValid = instagram.trim() && bio.trim() && categories.length > 0 && charge >= 500;
 
   const toggleCategory = (cat: string) => {
     haptic.tap();
@@ -40,40 +41,27 @@ export default function CreatorProfileForm({
     );
   };
 
-  const charge = parseInt(gigCharge, 10);
-  const isValid = instagram.trim() && bio.trim() && categories.length > 0 && charge >= 500;
-
   const handleSave = async () => {
     if (!isValid) return;
     setLoading(true);
     setError('');
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      const u = await getCurrentUser();
+      if (!u) throw new Error('not authenticated');
 
-      const { error: saveError } = await supabase.from('creator_profiles').upsert({
-        id: user.id,
-        instagram_handle: instagram.replace(/^@/, '').trim(),
+      await convex.mutation(api.users.saveCreatorProfile, {
+        userId: u._id,
+        instagramHandle: instagram.replace(/^@/, '').trim(),
         bio: bio.trim(),
-        content_categories: categories,
-        gig_charge: charge,
-        portfolio_url: portfolioUrl.trim() || null,
-        profile_complete: true,
-        updated_at: new Date().toISOString(),
+        contentCategories: categories,
+        gigCharge: charge,
+        portfolioUrl: portfolioUrl.trim() || undefined,
       });
 
-      if (saveError) {
-        // `saveError` is not always an instance of `Error`, so surface its real message.
-        throw new Error(saveError.message || 'Failed to save profile');
-      }
       haptic.success();
       onSave();
     } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : 'Failed to save profile';
-      // Helps debugging RLS/schema issues from the UI.
-      // eslint-disable-next-line no-console
-      console.error('[creator-profile-form] save failed:', e);
-      setError(message);
+      setError(e instanceof Error ? e.message : 'failed to save profile');
       haptic.error();
     } finally {
       setLoading(false);
@@ -96,7 +84,7 @@ export default function CreatorProfileForm({
         <label className="text-muted text-xs font-mono mb-2 block">bio</label>
         <textarea
           className="search-input min-h-[100px] resize-none"
-          placeholder="Tell brands about yourself..."
+          placeholder="tell brands about yourself..."
           value={bio}
           onChange={(e) => setBio(e.target.value)}
           maxLength={300}
@@ -142,7 +130,7 @@ export default function CreatorProfileForm({
           />
         </div>
         {gigCharge && charge < 500 && (
-          <p className="text-red-400 text-xs mt-1">Minimum charge is ₹500</p>
+          <p className="text-red-400 text-xs mt-1">minimum charge is ₹500</p>
         )}
       </div>
 

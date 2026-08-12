@@ -378,5 +378,5 @@ Must run smoothly on low end Android phones on Indian 3G/4G networks:
 
 ---
 
-*multiply. — where local influence meets local business.*
+*multiply. — where local influencers meets local business.*
 *Built for India. Hyperlocal. Monochrome. Tactile.*

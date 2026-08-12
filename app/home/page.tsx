@@ -3,136 +3,63 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Plus, Search, Filter, Star, CheckCircle2, MapPin } from 'lucide-react';
+import { Plus, Search, MapPin, Star } from 'lucide-react';
 import TabBar from '@/components/tab-bar';
-import { supabase } from '@/lib/supabase';
-import { getProfile, getCreatorProfile, needsCreatorSetup, UserProfile } from '@/lib/profile';
+import { getCurrentUser, type User } from '@/lib/auth';
+import { convex } from '@/lib/convex';
+import { api } from '@/convex/_generated/api';
 import { CONTENT_CATEGORIES } from '@/lib/categories';
 import { haptic, pressScale, spring } from '@/lib/haptics';
 
-interface FeedItem {
-  id: string;
-  username: string;
-  role: 'creator' | 'business';
-  city: string;
-  state: string;
-  is_pro?: boolean;
+interface FeedUser {
+  _id: string;
+  username?: string;
+  role?: string;
+  city?: string;
+  state?: string;
+  isPro?: boolean;
   rating?: number;
-  orders_count?: number;
-  charge?: number;
-  bio?: string;
-  categories?: string[];
-  avatar_url?: string;
+  ordersCount?: number;
+  profile?: {
+    gigCharge?: number;
+    bio?: string;
+    contentCategories?: string[];
+    description?: string;
+    name?: string;
+    category?: string;
+  } | null;
 }
 
 export default function HomePage() {
   const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [feedItems, setFeedItems] = useState<FeedUser[]>([]);
   const [fetchingFeed, setFetchingFeed] = useState(true);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   useEffect(() => {
-    const checkAndFetchFeed = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.replace('/');
-        return;
-      }
-
-      const profile = await getProfile(user.id);
-      if (!profile) {
-        router.replace('/');
-        return;
-      }
-
-      if (profile.role === 'creator') {
-        const creatorProfile = await getCreatorProfile(user.id);
-        if (needsCreatorSetup(profile, creatorProfile)) {
-          router.replace('/profile/setup');
-          return;
-        }
-      }
-
-      setUserProfile(profile);
+    const init = async () => {
+      const u = await getCurrentUser();
+      if (!u || !u.role || !u.city) { router.replace('/'); return; }
+      setUser(u);
       setLoading(false);
 
-      // Fetch hyperlocal feed: Gigs posted in user's city + Profiles matching city
       try {
         setFetchingFeed(true);
-        const targetRole = profile.role === 'creator' ? 'business' : 'creator';
-        
-        // 1. Fetch matching profiles in same city (case-insensitive)
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('role', targetRole)
-          .ilike('city', profile.city);
-
-        // 2. Fetch gigs NOT created by current user
-        const { data: gigsData } = await supabase
-          .from('gigs')
-          .select('*')
-          .neq('creator_id', user.id)
-          .order('created_at', { ascending: false });
-
-        let gigItems: FeedItem[] = [];
-        if (gigsData && gigsData.length > 0) {
-          const creatorIds = Array.from(new Set(gigsData.map((g) => g.creator_id).filter(Boolean)));
-          const { data: gigCreators } = await supabase
-            .from('profiles')
-            .select('*')
-            .in('id', creatorIds);
-
-          const creatorMap = new Map((gigCreators || []).map((c) => [c.id, c]));
-
-          gigItems = gigsData
-            .map((g): FeedItem | null => {
-              const poster = creatorMap.get(g.creator_id);
-              if (!poster) return null;
-              // Only show gigs from opposite role & same city
-              if (poster.role === profile.role) return null;
-              if (poster.city.toLowerCase() !== profile.city.toLowerCase()) return null;
-              return {
-                id: g.id,
-                username: poster.username || 'User',
-                role: poster.role,
-                city: poster.city,
-                state: poster.state,
-                is_pro: poster.is_pro,
-                charge: g.price || g.charge,
-                bio: `${g.title} - ${g.description || ''}`,
-              };
-            })
-            .filter((item): item is FeedItem => item !== null);
-        }
-
-        const combinedFeed = [...gigItems, ...((profiles as FeedItem[]) || [])];
-
-
-        // Sort items by ranking algorithm: Pro users first, then orders_count desc, then rating desc
-        const sorted = combinedFeed.sort((a, b) => {
-          if (a.is_pro && !b.is_pro) return -1;
-          if (!a.is_pro && b.is_pro) return 1;
-          const ordersA = a.orders_count || 0;
-          const ordersB = b.orders_count || 0;
-          if (ordersA !== ordersB) return ordersB - ordersA;
-          return (b.rating || 0) - (a.rating || 0);
+        const feed = await convex.query(api.users.getFeed, {
+          city: u.city,
+          role: u.role,
         });
-
-        setFeedItems(sorted);
+        setFeedItems(feed as FeedUser[]);
       } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error('Failed to load feed:', e);
+        console.error('feed error:', e);
       } finally {
         setFetchingFeed(false);
       }
-
     };
-
-    checkAndFetchFeed();
+    init();
   }, [router]);
 
   if (loading) {
@@ -144,22 +71,27 @@ export default function HomePage() {
         </div>
         <div className="skeleton w-full h-12 rounded-xl" />
         <div className="space-y-4 pt-4">
-          <div className="skeleton w-full h-32 rounded-card" />
-          <div className="skeleton w-full h-32 rounded-card" />
-          <div className="skeleton w-full h-32 rounded-card" />
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="skeleton w-full h-32 rounded-card" />
+          ))}
         </div>
       </div>
     );
   }
 
   const filteredItems = feedItems.filter((item) => {
+    const name = item.username ?? '';
+    const bio = item.profile?.bio ?? item.profile?.description ?? '';
     const matchesSearch =
-      item.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (item.bio && item.bio.toLowerCase().includes(searchQuery.toLowerCase()));
+      name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      bio.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory =
-      !selectedCategory || (item.categories && item.categories.includes(selectedCategory));
+      !selectedCategory ||
+      (item.profile?.contentCategories?.includes(selectedCategory) ?? false);
     return matchesSearch && matchesCategory;
   });
+
+  const targetLabel = user?.role === 'creator' ? 'businesses' : 'creators';
 
   return (
     <div className="app-container bg-bg pb-24 min-h-screen relative">
@@ -168,123 +100,141 @@ export default function HomePage() {
           <div>
             <h1 className="font-heading font-bold text-3xl text-text">multiply.</h1>
             <p className="text-muted text-xs font-mono mt-0.5 flex items-center gap-1">
-              <MapPin size={12} className="text-muted" />
-              {userProfile?.city}, {userProfile?.state}
+              <MapPin size={12} />
+              {user?.city}, {user?.state}
             </p>
           </div>
           <span className="text-xs font-mono px-3 py-1 rounded-full bg-surface border border-border text-muted">
-            {userProfile?.role} mode
+            {user?.role} mode
           </span>
         </div>
 
-        {/* Search Input */}
         <div className="mt-4 relative">
           <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
           <input
             className="search-input pl-10 pr-4 py-2.5 text-sm"
-            placeholder={`search ${userProfile?.role === 'creator' ? 'businesses' : 'creators'} in ${userProfile?.city}...`}
+            placeholder={`search ${targetLabel} in ${user?.city}...`}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
 
-        {/* Category Pills */}
-        <div className="flex gap-2 overflow-x-auto pt-3 pb-1 no-scrollbar">
-          <button
-            onClick={() => { haptic.tap(); setSelectedCategory(null); }}
-            className={`px-3 py-1 rounded-full text-xs font-mono whitespace-nowrap transition-all ${
-              selectedCategory === null
-                ? 'bg-text text-bg font-bold'
-                : 'bg-surface text-muted border border-border'
-            }`}
-          >
-            all
-          </button>
-          {CONTENT_CATEGORIES.map((cat) => (
+        {/* Category pills — only relevant for creator-mode (browsing businesses) */}
+        {user?.role === 'business' && (
+          <div className="flex gap-2 overflow-x-auto pt-3 pb-1 no-scrollbar">
             <button
-              key={cat}
-              onClick={() => { haptic.tap(); setSelectedCategory(cat === selectedCategory ? null : cat); }}
+              onClick={() => { haptic.tap(); setSelectedCategory(null); }}
               className={`px-3 py-1 rounded-full text-xs font-mono whitespace-nowrap transition-all ${
-                selectedCategory === cat
+                selectedCategory === null
                   ? 'bg-text text-bg font-bold'
                   : 'bg-surface text-muted border border-border'
               }`}
             >
-              {cat.toLowerCase()}
+              all
             </button>
-          ))}
-        </div>
+            {CONTENT_CATEGORIES.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => { haptic.tap(); setSelectedCategory(cat === selectedCategory ? null : cat); }}
+                className={`px-3 py-1 rounded-full text-xs font-mono whitespace-nowrap transition-all ${
+                  selectedCategory === cat
+                    ? 'bg-text text-bg font-bold'
+                    : 'bg-surface text-muted border border-border'
+                }`}
+              >
+                {cat.toLowerCase()}
+              </button>
+            ))}
+          </div>
+        )}
       </header>
 
       <main className="px-6 pt-2">
         {fetchingFeed ? (
           <div className="space-y-4 pt-2">
-            <div className="skeleton w-full h-32 rounded-card" />
-            <div className="skeleton w-full h-32 rounded-card" />
-            <div className="skeleton w-full h-32 rounded-card" />
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="skeleton w-full h-32 rounded-card" />
+            ))}
           </div>
         ) : filteredItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <span className="text-4xl mb-3">✳</span>
-            <p className="font-heading font-bold text-lg text-text mb-1">no {userProfile?.role === 'creator' ? 'businesses' : 'creators'} found</p>
+            <p className="font-heading font-bold text-lg text-text mb-1">
+              no {targetLabel} found
+            </p>
             <p className="text-muted text-xs font-body max-w-[260px]">
-              no active {userProfile?.role === 'creator' ? 'businesses' : 'creators'} listed in {userProfile?.city} yet. tap + to launch a gig!
+              no {targetLabel} listed in {user?.city} yet. be the first or tap + to post a gig!
             </p>
           </div>
         ) : (
           <div className="space-y-3">
-            {filteredItems.map((item, i) => (
-              <motion.div
-                key={item.id || i}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ ...spring.default, delay: i * 0.02 }}
-                className="p-4 rounded-card bg-surface border border-border hover:border-text/40 transition-all cursor-pointer"
-                onClick={() => { haptic.tap(); router.push(`/messages?user=${item.id}`); }}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-elevated border border-border flex items-center justify-center font-heading font-bold text-text">
-                      {item.username?.[0]?.toUpperCase() || 'U'}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <h3 className="font-heading font-bold text-text text-base">@{item.username}</h3>
-                        {item.is_pro && (
-                          <span className="text-text text-xs" title="Verified Pro Subscriber">✳</span>
-                        )}
+            {filteredItems.map((item, i) => {
+              const displayName =
+                item.role === 'business'
+                  ? (item.profile?.name ?? item.username ?? 'business')
+                  : (item.username ?? 'creator');
+              const bio =
+                item.profile?.bio ??
+                item.profile?.description ??
+                (item.profile?.category ? `${item.profile.category}` : '');
+              const charge = item.profile?.gigCharge;
+
+              return (
+                <motion.div
+                  key={item._id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ ...spring.default, delay: i * 0.02 }}
+                  className="p-4 rounded-card bg-surface border border-border hover:border-text/40 transition-all cursor-pointer"
+                  onClick={() => { haptic.tap(); router.push(`/messages?user=${item._id}`); }}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-elevated border border-border flex items-center justify-center font-heading font-bold text-text">
+                        {displayName[0]?.toUpperCase() ?? '?'}
                       </div>
-                      <p className="text-muted text-xs font-mono">{item.city}, {item.state}</p>
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <h3 className="font-heading font-bold text-text text-base">
+                            {item.role === 'business' ? displayName : `@${displayName}`}
+                          </h3>
+                          {item.isPro && (
+                            <span className="text-text text-xs" title="Pro subscriber">✳</span>
+                          )}
+                        </div>
+                        <p className="text-muted text-xs font-mono">
+                          {item.city}, {item.state}
+                        </p>
+                      </div>
                     </div>
+                    {charge && (
+                      <span className="text-xs font-mono font-bold text-text bg-elevated px-2.5 py-1 rounded-full border border-border">
+                        ₹{charge}
+                      </span>
+                    )}
                   </div>
 
-                  {item.charge && (
-                    <span className="text-xs font-mono font-bold text-text bg-elevated px-2.5 py-1 rounded-full border border-border">
-                      ₹{item.charge}
-                    </span>
+                  {bio && (
+                    <p className="text-muted text-xs font-body mt-2.5 line-clamp-2">{bio}</p>
                   )}
-                </div>
 
-                {item.bio && (
-                  <p className="text-muted text-xs font-body mt-2.5 line-clamp-2">{item.bio}</p>
-                )}
-
-                <div className="mt-3 pt-2.5 border-t border-border/50 flex items-center justify-between text-[11px] font-mono text-dim">
-                  <div className="flex items-center gap-3">
-                    <span className="flex items-center gap-1 text-muted">
-                      <Star size={11} className="text-text fill-text" /> {item.rating ? item.rating.toFixed(1) : '5.0'}
-                    </span>
-                    <span>{item.orders_count || 0} orders completed</span>
+                  <div className="mt-3 pt-2.5 border-t border-border/50 flex items-center justify-between text-[11px] font-mono text-dim">
+                    <div className="flex items-center gap-3">
+                      <span className="flex items-center gap-1 text-muted">
+                        <Star size={11} className="text-text fill-text" />
+                        {item.rating ? item.rating.toFixed(1) : '5.0'}
+                      </span>
+                      <span>{item.ordersCount ?? 0} orders</span>
+                    </div>
+                    <span className="text-text">chat & deal →</span>
                   </div>
-                  <span className="text-text hover:underline">chat & deal →</span>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </div>
         )}
       </main>
 
-      {/* Floating Action Button for Gigs */}
       <motion.button
         className="fixed bottom-24 right-6 z-30 w-14 h-14 rounded-full bg-text text-bg flex items-center justify-center shadow-2xl border border-bg"
         onClick={() => { haptic.tap(); router.push('/create-gig'); }}
@@ -297,4 +247,3 @@ export default function HomePage() {
     </div>
   );
 }
-

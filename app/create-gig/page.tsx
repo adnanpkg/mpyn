@@ -4,9 +4,21 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { supabase } from '@/lib/supabase';
+import { getCurrentUser } from '@/lib/auth';
+import { convex } from '@/lib/convex';
+import { api } from '@/convex/_generated/api';
 import { haptic, pressScale } from '@/lib/haptics';
-import { getProfile } from '@/lib/profile';
+
+function calcCut(charge: number, isPro: boolean): number {
+  if (isPro) {
+    if (charge <= 2000) return 15;
+    if (charge <= 10000) return 28;
+    return 40;
+  }
+  if (charge <= 2000) return 19;
+  if (charge <= 10000) return 35;
+  return 50;
+}
 
 export default function CreateGigPage() {
   const router = useRouter();
@@ -17,56 +29,30 @@ export default function CreateGigPage() {
   const [error, setError] = useState('');
 
   const chargeNum = parseInt(charge, 10);
-  const isValid = title.trim() && chargeNum >= 500;
-
-  // Platform cut formula from context.md for standard user:
-  // ₹500–₹2,000 -> ₹19 cut, ₹2,001–₹10,000 -> ₹35 cut, ₹10,001+ -> ₹50 cut
-  const getPlatformCut = (amount: number) => {
-    if (isNaN(amount) || amount < 500) return 0;
-    if (amount <= 2000) return 19;
-    if (amount <= 10000) return 35;
-    return 50;
-  };
-
-  const platformCut = getPlatformCut(chargeNum);
-  const earnings = chargeNum > 0 ? chargeNum - platformCut : 0;
+  const isValid = title.trim().length > 0 && chargeNum >= 500;
+  const cut = isNaN(chargeNum) || chargeNum < 500 ? 0 : calcCut(chargeNum, false);
+  const earnings = chargeNum > 0 ? chargeNum - cut : 0;
 
   const handleCreate = async () => {
-    if (!isValid) {
-      if (chargeNum < 500) {
-        setError('minimum gig is ₹500 bro');
-      }
-      return;
-    }
+    if (!isValid) return;
     setLoading(true);
     setError('');
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      const u = await getCurrentUser();
+      if (!u) throw new Error('not authenticated');
 
-      const profile = await getProfile(user.id);
-      if (!profile) {
-        throw new Error('Complete signup/profile first, then create a gig.');
-      }
-
-      const { error: insertError } = await supabase.from('gigs').insert({
-        creator_id: user.id,
+      await convex.mutation(api.gigs.create, {
+        creatorId: u._id,
         title: title.trim(),
-        description: description.trim() || null,
+        description: description.trim() || undefined,
         charge: chargeNum,
-        status: 'open',
+        isPro: u.isPro ?? false,
       });
 
-
-      if (insertError) {
-        throw new Error(insertError.message || 'Failed to create gig');
-      }
       haptic.success();
       router.replace('/gigs');
     } catch (e: unknown) {
-      // eslint-disable-next-line no-console
-      console.error('[create-gig] create failed:', e);
-      setError(e instanceof Error ? e.message : 'Failed to create gig');
+      setError(e instanceof Error ? e.message : 'failed to create gig');
       haptic.error();
     } finally {
       setLoading(false);
@@ -83,7 +69,7 @@ export default function CreateGigPage() {
         >
           <ArrowLeft size={20} />
         </motion.button>
-        <h1 className="font-heading font-bold text-2xl text-text">new gig</h1>
+        <h1 className="font-heading font-bold text-2xl text-text">new gig.</h1>
       </header>
 
       <main className="px-6 space-y-5 pb-8">
@@ -91,7 +77,7 @@ export default function CreateGigPage() {
           <label className="text-muted text-xs font-mono mb-2 block">title</label>
           <input
             className="search-input"
-            placeholder="e.g. Instagram Reel for fashion brand"
+            placeholder="e.g. instagram reel for local restaurant"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             autoFocus
@@ -99,10 +85,10 @@ export default function CreateGigPage() {
         </div>
 
         <div>
-          <label className="text-muted text-xs font-mono mb-2 block">description</label>
+          <label className="text-muted text-xs font-mono mb-2 block">description (optional)</label>
           <textarea
             className="search-input min-h-[120px] resize-none"
-            placeholder="What does this gig involve?"
+            placeholder="what does this gig involve?"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
@@ -134,7 +120,7 @@ export default function CreateGigPage() {
             </div>
             <div className="flex justify-between text-xs font-mono text-muted">
               <span>multiply. cut</span>
-              <span className="text-text">-₹{platformCut}</span>
+              <span className="text-text">−₹{cut}</span>
             </div>
             <div className="pt-2 border-t border-border flex justify-between text-sm font-mono font-bold text-text">
               <span>you receive</span>
@@ -151,10 +137,9 @@ export default function CreateGigPage() {
           onClick={handleCreate}
           {...pressScale}
         >
-          {loading ? 'creating...' : 'confirm gig.'}
+          {loading ? 'creating...' : 'post gig. ✳'}
         </motion.button>
       </main>
     </div>
   );
-
 }

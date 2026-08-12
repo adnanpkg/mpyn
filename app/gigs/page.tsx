@@ -2,107 +2,103 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { PhoneCall, CheckCircle2, AlertCircle, Clock, Trash2 } from 'lucide-react';
-import TabBar from '@/components/tab-bar';
-import { supabase } from '@/lib/supabase';
-import { haptic, pressScale } from '@/lib/haptics';
+import { CheckCircle2, Clock, Trash2, AlertCircle, PhoneCall } from 'lucide-react';
 import { motion } from 'framer-motion';
+import TabBar from '@/components/tab-bar';
+import { getCurrentUser, type User } from '@/lib/auth';
+import { convex } from '@/lib/convex';
+import { api } from '@/convex/_generated/api';
+import { haptic, pressScale } from '@/lib/haptics';
 
 interface Gig {
-  id: string;
+  _id: string;
   title: string;
-  description: string | null;
-  price?: number;
-  charge?: number;
-  cut?: number;
-  status: 'open' | 'agreed' | 'in_progress' | 'pending_completion' | 'completed' | 'disputed';
-  creator_marked_complete?: boolean;
-  business_marked_complete?: boolean;
-  creator_id: string;
-  business_id: string | null;
+  description?: string;
+  charge: number;
+  cut: number;
+  status: string;
+  creatorId: string;
+  businessId?: string;
+  creatorMarkedComplete?: boolean;
+  businessMarkedComplete?: boolean;
+  createdAt: number;
 }
 
 export default function GigsPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
   const [gigs, setGigs] = useState<Gig[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [userId, setUserId] = useState('');
+
+  const loadGigs = async (u: User) => {
+    const data = await convex.query(api.gigs.getForUser, { userId: u._id });
+    setGigs(data as Gig[]);
+  };
 
   useEffect(() => {
-    const load = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.replace('/');
-        return;
-      }
-      setUserId(user.id);
-
-      const { data, error: loadError } = await supabase
-        .from('gigs')
-        .select('*')
-        .or(`creator_id.eq.${user.id},business_id.eq.${user.id}`)
-        .order('created_at', { ascending: false });
-
-      if (loadError) {
-        setError(loadError.message || 'Failed to load gigs');
-        setGigs([]);
-      } else {
-        setGigs(data ?? []);
-      }
-
+    const init = async () => {
+      const u = await getCurrentUser();
+      if (!u) { router.replace('/'); return; }
+      setUser(u);
+      await loadGigs(u);
       setLoading(false);
     };
-    load();
+    init();
   }, [router]);
 
-  const handleMarkComplete = async (gig: Gig) => {
+  const handleCreatorMarkComplete = async (gig: Gig) => {
+    if (!user) return;
     haptic.heavy();
     setError('');
     try {
-      // 1. Try updating status to 'completed'
-      const { error: updateErr } = await supabase
-        .from('gigs')
-        .update({ status: 'completed' })
-        .eq('id', gig.id);
-
-      if (updateErr) {
-        throw updateErr;
-      }
-
-      setGigs((prev) =>
-        prev.map((g) => (g.id === gig.id ? { ...g, status: 'completed', creator_marked_complete: true } : g))
-      );
+      await convex.mutation(api.gigs.creatorMarkComplete, {
+        gigId: gig._id as any,
+        userId: user._id,
+      });
+      await loadGigs(user);
+      haptic.success();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to update gig status');
+      setError(e instanceof Error ? e.message : 'failed to update');
+      haptic.error();
+    }
+  };
+
+  const handleBusinessMarkComplete = async (gig: Gig) => {
+    if (!user) return;
+    haptic.heavy();
+    setError('');
+    try {
+      await convex.mutation(api.gigs.businessMarkComplete, {
+        gigId: gig._id as any,
+        userId: user._id,
+      });
+      await loadGigs(user);
+      haptic.success();
+      navigator.vibrate?.([20, 30, 20, 30, 20]); // gig completed haptic
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'failed to update');
+      haptic.error();
     }
   };
 
   const handleDelete = async (gigId: string) => {
-    if (!window.confirm('Are you sure you want to delete this gig? This action cannot be undone.')) return;
-    
+    if (!user) return;
+    if (!window.confirm('delete this gig? this cannot be undone.')) return;
     haptic.heavy();
-    setLoading(true);
     setError('');
-    
     try {
-      const { error: delErr } = await supabase
-        .from('gigs')
-        .delete()
-        .eq('id', gigId);
-
-      if (delErr) throw delErr;
-
-      setGigs((prev) => prev.filter((g) => g.id !== gigId));
+      await convex.mutation(api.gigs.remove, {
+        gigId: gigId as any,
+        userId: user._id,
+      });
+      setGigs((prev) => prev.filter((g) => g._id !== gigId));
       haptic.success();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to delete gig');
+      setError(e instanceof Error ? e.message : 'failed to delete');
       haptic.error();
-    } finally {
-      setLoading(false);
     }
   };
-
 
   if (loading) {
     return (
@@ -121,62 +117,62 @@ export default function GigsPage() {
           <h1 className="font-heading font-bold text-3xl text-text">gigs.</h1>
           <p className="text-muted text-xs font-mono">order tracking & status</p>
         </div>
-        
-        {/* Customer Care Button */}
         <a
           href="tel:+919876543210"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface border border-border text-xs font-mono text-text hover:bg-elevated transition-all"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface border border-border text-xs font-mono text-text"
           onClick={() => haptic.tap()}
         >
-          <PhoneCall size={12} className="text-text" />
-          <span>support</span>
+          <PhoneCall size={12} />
+          support
         </a>
       </header>
 
       <main className="px-6">
         {error && <p className="text-red-400 text-xs font-mono mb-4">{error}</p>}
+
         {gigs.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <span className="text-4xl mb-3">✳</span>
             <p className="font-heading font-bold text-base text-text mb-1">no active gigs</p>
             <p className="text-muted text-xs font-body max-w-[220px]">
-              when you confirm deals, orders will be tracked here.
+              when you confirm deals, they'll be tracked here.
             </p>
           </div>
         ) : (
           <div className="space-y-3">
             {gigs.map((gig) => {
-              const amount = gig.price || gig.charge || 0;
+              const isCreator = gig.creatorId === user?._id;
+              const isBusiness = gig.businessId === user?._id;
               const isCompleted = gig.status === 'completed';
-              const isPending = gig.status === 'pending_completion';
+              const isDisputed = gig.status === 'disputed';
 
               return (
                 <div
-                  key={gig.id}
+                  key={gig._id}
                   className="p-4 rounded-card bg-surface border border-border space-y-3"
                 >
                   <div className="flex items-start justify-between">
                     <div>
                       <h3 className="font-heading font-bold text-text text-base">{gig.title}</h3>
-                      <p className="text-muted text-xs font-mono mt-0.5 capitalize flex items-center gap-1">
+                      <p className="text-muted text-xs font-mono mt-0.5 flex items-center gap-1">
                         {isCompleted ? (
                           <CheckCircle2 size={12} className="text-text" />
                         ) : (
-                          <Clock size={12} className="text-muted" />
+                          <Clock size={12} />
                         )}
-                        status: <span className="text-text font-bold">{gig.status.replace('_', ' ')}</span>
+                        <span className="text-text font-bold">{gig.status.replace(/_/g, ' ')}</span>
                       </p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       <span className="text-text font-mono font-bold text-sm bg-elevated px-2.5 py-1 rounded-full border border-border">
-                        ₹{amount}
+                        ₹{gig.charge}
                       </span>
-                      {gig.creator_id === userId && gig.status === 'open' && (
+                      {isCreator && gig.status === 'open' && (
                         <motion.button
                           className="p-1.5 rounded-full bg-red-500/10 text-red-500 border border-red-500/20"
-                          onClick={() => handleDelete(gig.id)}
+                          onClick={() => handleDelete(gig._id)}
                           {...pressScale}
-                          title="Delete gig"
+                          title="delete gig"
                         >
                           <Trash2 size={12} />
                         </motion.button>
@@ -188,32 +184,68 @@ export default function GigsPage() {
                     <p className="text-muted text-xs font-body line-clamp-2">{gig.description}</p>
                   )}
 
-                  {/* Dual Completion Button */}
+                  {/* Platform cut breakdown */}
                   {!isCompleted && (
-                    <div className="pt-2 border-t border-border flex items-center justify-between">
-                      <span className="text-[11px] font-mono text-dim">
-                        {gig.creator_marked_complete ? 'you marked posted' : 'awaiting completion'}
-                      </span>
-
-                      <motion.button
-                        className="px-3 py-1.5 rounded-full bg-text text-bg font-mono text-xs font-bold disabled:opacity-40"
-                        disabled={gig.creator_marked_complete}
-                        onClick={() => handleMarkComplete(gig)}
-                        {...pressScale}
-                      >
-                        {gig.creator_marked_complete ? "posted! waiting..." : "i've posted it."}
-                      </motion.button>
+                    <div className="text-[11px] font-mono text-dim flex gap-3">
+                      <span>multiply. cut: ₹{gig.cut}</span>
+                      <span>creator receives: ₹{gig.charge - gig.cut}</span>
                     </div>
                   )}
 
-                  {/* Customer Care Dispute note */}
-                  <div className="pt-2 border-t border-border/50 flex justify-end">
+                  {/* Action buttons — role-dependent */}
+                  {!isCompleted && !isDisputed && (
+                    <div className="pt-2 border-t border-border flex items-center justify-between">
+                      {isCreator && (
+                        <>
+                          <span className="text-[11px] font-mono text-dim">
+                            {gig.creatorMarkedComplete ? 'posted ✓ — waiting for business' : 'mark when posted'}
+                          </span>
+                          <motion.button
+                            className="px-3 py-1.5 rounded-full bg-text text-bg font-mono text-xs font-bold disabled:opacity-40"
+                            disabled={!!gig.creatorMarkedComplete}
+                            onClick={() => handleCreatorMarkComplete(gig)}
+                            {...pressScale}
+                          >
+                            {gig.creatorMarkedComplete ? 'posted!' : "i've posted it."}
+                          </motion.button>
+                        </>
+                      )}
+
+                      {isBusiness && gig.creatorMarkedComplete && (
+                        <>
+                          <span className="text-[11px] font-mono text-dim">creator posted — confirm?</span>
+                          <motion.button
+                            className="px-3 py-1.5 rounded-full bg-text text-bg font-mono text-xs font-bold"
+                            onClick={() => handleBusinessMarkComplete(gig)}
+                            {...pressScale}
+                          >
+                            confirm completion.
+                          </motion.button>
+                        </>
+                      )}
+
+                      {isBusiness && !gig.creatorMarkedComplete && (
+                        <span className="text-[11px] font-mono text-dim">
+                          waiting for creator to post...
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {isCompleted && (
+                    <div className="pt-2 border-t border-border flex items-center gap-2">
+                      <CheckCircle2 size={14} className="text-text" />
+                      <span className="text-xs font-mono text-text">gig done. ✳</span>
+                    </div>
+                  )}
+
+                  <div className="pt-1 flex justify-end">
                     <a
                       href="tel:+919876543210"
                       className="text-[10px] font-mono text-dim hover:text-text flex items-center gap-1"
                     >
                       <AlertCircle size={10} />
-                      issue with this gig? call customer care
+                      issue? call support
                     </a>
                   </div>
                 </div>
@@ -226,4 +258,3 @@ export default function GigsPage() {
     </div>
   );
 }
-

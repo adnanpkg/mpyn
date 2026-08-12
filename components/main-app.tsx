@@ -2,42 +2,35 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
-import { getProfile, getCreatorProfile, needsCreatorSetup } from '@/lib/profile';
+import { getCurrentUser } from '@/lib/auth';
 
 export default function MainApp() {
   const router = useRouter();
 
   useEffect(() => {
     const route = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      const user = await getCurrentUser();
+      if (!user) { router.replace('/'); return; }
+
+      if (!user.username || !user.role || !user.city) {
+        // Profile incomplete — send back to onboarding
         router.replace('/');
         return;
       }
 
-      const profile = await getProfile(user.id);
-      if (!profile) {
-        router.replace('/');
-        return;
+      if (user.role === 'creator') {
+        // Check if creator profile is complete
+        router.replace('/home');
+      } else {
+        router.replace('/home');
       }
-
-      if (profile.role === 'creator') {
-        const creatorProfile = await getCreatorProfile(user.id);
-        if (needsCreatorSetup(profile, creatorProfile)) {
-          router.replace('/profile/setup');
-          return;
-        }
-      }
-
-      router.replace('/home');
     };
     route();
   }, [router]);
 
   return (
     <div className="fixed inset-0 bg-bg flex items-center justify-center">
-      <div className="skeleton w-24 h-4" />
+      <div className="skeleton w-24 h-4 rounded" />
     </div>
   );
 }
