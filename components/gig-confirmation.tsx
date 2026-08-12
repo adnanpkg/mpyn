@@ -220,7 +220,7 @@ export default function GigConfirmation({
           
           <motion.button
             className="w-full bg-text text-bg py-3 px-4 rounded-lg font-heading font-bold text-sm disabled:opacity-50 flex items-center justify-center gap-2"
-            onClick={() => handlePayment(gig.paymentMode as 'advance' | 'direct' || 'direct')}
+            onClick={() => handlePayment((gig as any).paymentMode as 'advance' | 'direct' || 'direct')}
             disabled={processingPayment}
             {...pressScale}
           >
@@ -230,7 +230,7 @@ export default function GigConfirmation({
                 processing...
               </>
             ) : (
-              `pay now — ₹${((gig.paymentMode === 'advance' ? platformFee : gig.charge + platformFee)).toLocaleString()}`
+              `pay now — ₹${(((gig as any).paymentMode === 'advance' ? platformFee : gig.charge + platformFee)).toLocaleString()}`
             )}
           </motion.button>
         </div>

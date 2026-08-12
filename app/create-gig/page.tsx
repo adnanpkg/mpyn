@@ -31,7 +31,7 @@ export default function CreateGigPage() {
 
   const chargeNum = parseInt(charge, 10);
   const isValid = title.trim().length > 0 && chargeNum >= 500;
-  const isPro = user?.isPro && user?.proExpiresAt && user?.proExpiresAt > Date.now();
+  const isPro = user?.isPro && (user as any)?.proExpiresAt && (user as any).proExpiresAt > Date.now();
 
   const handleCreate = async () => {
     if (!isValid) return;
@@ -46,7 +46,7 @@ export default function CreateGigPage() {
         title: title.trim(),
         description: description.trim() || undefined,
         charge: chargeNum,
-        isPro: u.isPro && u.proExpiresAt && u.proExpiresAt > Date.now(),
+        isPro: u.isPro && (u as any).proExpiresAt && (u as any).proExpiresAt > Date.now(),
       });
 
       haptic.success();

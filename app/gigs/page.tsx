@@ -125,7 +125,7 @@ export default function GigsPage() {
                         <PaymentStatus
                           status={gig.status}
                           amount={gig.charge}
-                          paymentMode={gig.paymentMode}
+                          paymentMode={(gig as any).paymentMode}
                         />
                       </div>
                     </div>
@@ -153,8 +153,8 @@ export default function GigsPage() {
                   {/* Platform fee breakdown */}
                   {!isCompleted && (
                     <div className="text-[11px] font-mono text-dim flex gap-3">
-                      <span>platform fee: ₹{gig.cut || gig.platformFee || Math.round(gig.charge * 0.05)}</span>
-                      <span>creator receives: ₹{gig.charge - (gig.cut || gig.platformFee || Math.round(gig.charge * 0.05))}</span>
+                      <span>platform fee: ₹{gig.cut || (gig as any).platformFee || Math.round(gig.charge * 0.05)}</span>
+                      <span>creator receives: ₹{gig.charge - (gig.cut || (gig as any).platformFee || Math.round(gig.charge * 0.05))}</span>
                     </div>
                   )}
 

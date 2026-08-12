@@ -284,7 +284,7 @@ export default function MessagesPage() {
               gig={activeGig}
               currentUserId={currentUser?._id as string}
               currentUserEmail={currentUser?.email as string}
-              businessIsPro={currentUser?.isPro && currentUser?.proExpiresAt && currentUser?.proExpiresAt > Date.now()}
+              businessIsPro={currentUser?.isPro && (currentUser as any)?.proExpiresAt && (currentUser as any)?.proExpiresAt > Date.now()}
               onConfirm={handleGigConfirm}
               onPaymentSuccess={handlePaymentSuccess}
               loading={confirmingGig}

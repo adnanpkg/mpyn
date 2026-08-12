@@ -1,5 +1,4 @@
 import { query, mutation } from './_generated/server';
-import { query, mutation } from './_generated/server';
 import { v } from 'convex/values';
 
 // Platform cut calculator: 5% for free users, 0% for Pro users
@@ -296,8 +295,8 @@ export const confirm = mutation({
     if (!business) throw new Error('business user not found');
     
     // Calculate platform fee based on Pro status
-    const isPro = business.isPro && business.proExpiresAt && business.proExpiresAt > Date.now();
-    const platformFee = calcPlatformFee(gig.charge, isPro ?? false);
+    const isPro = Boolean(business.isPro && (business as any).proExpiresAt && (business as any).proExpiresAt > Date.now());
+    const platformFee = calcPlatformFee(gig.charge, isPro);
     
     await ctx.db.patch(gigId, {
       businessId,

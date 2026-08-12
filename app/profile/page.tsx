@@ -86,7 +86,7 @@ export default function ProfilePage() {
           <p className="text-muted text-sm font-body mt-1 capitalize">
             {user?.role} · {user?.city}, {user?.state}
           </p>
-          {user?.isPro && user?.proExpiresAt && user?.proExpiresAt > Date.now() ? (
+          {user?.isPro && (user as any)?.proExpiresAt && (user as any)?.proExpiresAt > Date.now() ? (
             <span className="mt-2 px-3 py-1 rounded-full bg-text text-bg text-xs font-mono font-bold">
               ✳ pro
             </span>
@@ -202,7 +202,7 @@ export default function ProfilePage() {
           userId={user?._id as string}
           userEmail={user?.email as string}
           isPro={user?.isPro}
-          proExpiresAt={user?.proExpiresAt}
+          proExpiresAt={(user as any)?.proExpiresAt}
           onUpgradeSuccess={() => {
             // Refresh user data after successful upgrade
             window.location.reload();
