@@ -168,7 +168,6 @@ export default function RatingDialog({
             className="flex-1 bg-text text-bg py-3 px-3 sm:px-4 rounded-full font-heading font-bold text-sm disabled:opacity-50 flex items-center justify-center gap-2"
             onClick={handleSubmit}
             disabled={rating === 0 || submitting}
-            whileTap={{ scale: 0.96 }}
             {...pressScale}
           >
             {submitting ? (

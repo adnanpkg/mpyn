@@ -175,7 +175,6 @@ export default function ProUpgradeCard({
         className="w-full bg-text text-bg py-3 px-4 rounded-full font-heading font-bold text-sm disabled:opacity-50 flex items-center justify-center gap-2"
         onClick={handleUpgrade}
         disabled={upgrading}
-        whileTap={{ scale: 0.96 }}
         {...pressScale}
       >
         {upgrading ? (

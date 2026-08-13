@@ -23,7 +23,8 @@ export const getConversations = query({
     // For each partner, get last message + their user info
     const conversations = await Promise.all(
       Array.from(partnerIds).map(async (partnerId) => {
-        const partner = await ctx.db.get(partnerId as any);
+        const partnerDoc = await ctx.db.get(partnerId as any);
+        const partner = partnerDoc as any;
         
         // Try to get profile name for businesses
         let displayName = partner?.username;
