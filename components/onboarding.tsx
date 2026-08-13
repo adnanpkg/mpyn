@@ -124,10 +124,27 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
         if (result.user.username && result.user.role && result.user.city) {
           onComplete();
         } else {
-          // Genuinely incomplete account — rare edge case, just complete from username step
-          // (they already have email verified so skip to username)
-          setMode('signup');
-          setSignupStep(7);
+          // Incomplete profile - need to complete signup flow
+          // Check what's missing and start from appropriate step
+          if (!result.user.city || !result.user.state) {
+            // Missing location - start from country selection (step 1)
+            setMode('signup');
+            setSignupStep(1);
+          } else if (!result.user.role) {
+            // Missing role - go to role selection (step 4)
+            // But first set their existing location data
+            if (result.user.state) setSelectedState(result.user.state);
+            if (result.user.city) setSelectedCity(result.user.city);
+            setMode('signup');
+            setSignupStep(4);
+          } else {
+            // Just missing username - go to username step (step 7)
+            if (result.user.state) setSelectedState(result.user.state);
+            if (result.user.city) setSelectedCity(result.user.city);
+            if (result.user.role) setRole(result.user.role as 'creator' | 'business');
+            setMode('signup');
+            setSignupStep(7);
+          }
         }
       }
     } catch (e: unknown) {
@@ -144,6 +161,18 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
     // Hard block — must have gone through OTP verification
     if (!verifiedUserId) {
       setError('please verify your email first');
+      haptic.error();
+      return;
+    }
+    // Validate role is selected
+    if (!role || (role !== 'creator' && role !== 'business')) {
+      setError('please select your role first');
+      haptic.error();
+      return;
+    }
+    // Validate location is selected
+    if (!selectedState || !selectedCity) {
+      setError('please select your location first');
       haptic.error();
       return;
     }

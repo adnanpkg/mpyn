@@ -46,6 +46,20 @@ export const completeProfile = mutation({
     city: v.string(),
   },
   handler: async (ctx, { userId, username, role, state, city }) => {
+    // Validate inputs
+    if (!username || username.trim().length === 0) {
+      throw new Error('username is required');
+    }
+    if (!role || (role !== 'creator' && role !== 'business')) {
+      throw new Error('role must be either creator or business');
+    }
+    if (!state || state.trim().length === 0) {
+      throw new Error('state is required');
+    }
+    if (!city || city.trim().length === 0) {
+      throw new Error('city is required');
+    }
+    
     // Check username not taken
     const existing = await ctx.db
       .query('users')
