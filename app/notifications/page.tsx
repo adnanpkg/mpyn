@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Bell, CheckCircle2, MessageSquare, Tag, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { spring } from '@/lib/haptics';
@@ -9,13 +10,15 @@ import { getCurrentUser } from '@/lib/auth';
 import { convex } from '@/lib/convex';
 import { api } from '@/convex/_generated/api';
 import { haptic, pressScale } from '@/lib/haptics';
+import { type Id } from '@/convex/_generated/dataModel';
 
 interface Notification {
-  _id: string;
+  _id: Id<'notifications'>;
   type: string;
   content: string;
   read?: boolean;
   createdAt: number;
+  fromUserId?: Id<'users'>;
 }
 
 const iconForType = (type: string) => {
@@ -30,15 +33,16 @@ const iconForType = (type: string) => {
 };
 
 export default function NotificationsPage() {
+  const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<Id<'users'> | null>(null);
 
   useEffect(() => {
     const load = async () => {
       const u = await getCurrentUser();
       if (!u) return;
-      setUserId(u._id as string);
+      setUserId(u._id as Id<'users'>);
       const notifs = await convex.query(api.notifications.getForUser, { userId: u._id });
       setNotifications(notifs as Notification[]);
       setLoading(false);
@@ -49,7 +53,7 @@ export default function NotificationsPage() {
   const markAllRead = async () => {
     if (!userId) return;
     haptic.tap();
-    await convex.mutation(api.notifications.markAllRead, { userId: userId as any });
+    await convex.mutation(api.notifications.markAllRead, { userId: userId as Id<'users'> });
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
@@ -96,11 +100,18 @@ export default function NotificationsPage() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ ...spring.default, delay: i * 0.02 }}
-                className={`p-4 rounded-card border flex items-start gap-3 transition-colors ${
+                className={`p-4 rounded-card border flex items-start gap-3 transition-colors cursor-pointer hover:border-text/40 ${
                   notif.read
                     ? 'bg-surface border-border'
                     : 'bg-elevated border-border'
                 }`}
+                onClick={() => {
+                  haptic.tap();
+                  // Redirect to chat if message notification
+                  if (notif.type === 'new_message' && notif.fromUserId) {
+                    router.push(`/messages?user=${notif.fromUserId}`);
+                  }
+                }}
               >
                 <div className={`p-2 rounded-full border flex-shrink-0 mt-0.5 ${
                   notif.read ? 'bg-surface border-border text-muted' : 'bg-elevated border-border text-text'

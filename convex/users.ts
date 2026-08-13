@@ -5,7 +5,21 @@ import { v } from 'convex/values';
 export const getById = query({
   args: { userId: v.id('users') },
   handler: async (ctx, { userId }) => {
-    return await ctx.db.get(userId);
+    const user = await ctx.db.get(userId);
+    if (!user) return null;
+    
+    // For businesses, include profile name
+    if (user.role === 'business') {
+      const bp = await ctx.db
+        .query('businessProfiles')
+        .withIndex('by_user', (q) => q.eq('userId', userId))
+        .first();
+      if (bp?.name) {
+        return { ...user, username: bp.name };
+      }
+    }
+    
+    return user;
   },
 });
 
@@ -148,51 +162,64 @@ export const saveBusinessProfile = mutation({
   },
 });
 
-// Get feed: users in same city with opposite role, sorted by ranking
+// Get feed: open gigs in same city with creator info (for home page)
 export const getFeed = query({
   args: {
     city: v.string(),
     role: v.union(v.literal('creator'), v.literal('business')),
   },
   handler: async (ctx, { city, role }) => {
-    const targetRole = role === 'creator' ? 'business' : 'creator';
-    const users = await ctx.db
-      .query('users')
-      .filter((q) =>
-        q.and(
-          q.eq(q.field('role'), targetRole),
-          q.eq(q.field('city'), city)
-        )
-      )
+    // Businesses see creator gigs, creators see business gigs (but we only have creator gigs)
+    // So only show gigs when user is a business
+    if (role !== 'business') {
+      return []; // Creators don't browse gigs — they create them
+    }
+
+    // Get all open gigs
+    const allGigs = await ctx.db
+      .query('gigs')
+      .withIndex('by_status', (q) => q.eq('status', 'open'))
       .collect();
 
-    // Attach creator/business profile data
-    const enriched = await Promise.all(
-      users.map(async (u) => {
-        if (u.role === 'creator') {
-          const cp = await ctx.db
-            .query('creatorProfiles')
-            .withIndex('by_user', (q) => q.eq('userId', u._id))
-            .first();
-          return { ...u, profile: cp };
-        } else {
-          const bp = await ctx.db
-            .query('businessProfiles')
-            .withIndex('by_user', (q) => q.eq('userId', u._id))
-            .first();
-          return { ...u, profile: bp };
-        }
+    // Filter by creator's city and enrich with creator data
+    const enrichedGigs = await Promise.all(
+      allGigs.map(async (gig) => {
+        const creator = await ctx.db.get(gig.creatorId);
+        if (!creator || creator.city !== city) return null;
+
+        // Get creator profile
+        const profile = await ctx.db
+          .query('creatorProfiles')
+          .withIndex('by_user', (q) => q.eq('userId', gig.creatorId))
+          .first();
+
+        return {
+          ...gig,
+          creator: {
+            _id: creator._id,
+            username: creator.username,
+            city: creator.city,
+            state: creator.state,
+            isPro: creator.isPro,
+            rating: creator.rating,
+            ordersCount: creator.ordersCount,
+            profile,
+          },
+        };
       })
     );
 
-    // Ranking: Pro first → orders desc → rating desc
-    return enriched.sort((a, b) => {
-      if (a.isPro && !b.isPro) return -1;
-      if (!a.isPro && b.isPro) return 1;
-      const oA = a.ordersCount ?? 0;
-      const oB = b.ordersCount ?? 0;
+    // Filter nulls and sort: Pro creators first → orders desc → rating desc
+    const validGigs = enrichedGigs.filter(Boolean);
+    return validGigs.sort((a, b) => {
+      const aPro = a?.creator?.isPro ?? false;
+      const bPro = b?.creator?.isPro ?? false;
+      if (aPro && !bPro) return -1;
+      if (!aPro && bPro) return 1;
+      const oA = a?.creator?.ordersCount ?? 0;
+      const oB = b?.creator?.ordersCount ?? 0;
       if (oA !== oB) return oB - oA;
-      return (b.rating ?? 0) - (a.rating ?? 0);
+      return (b?.creator?.rating ?? 0) - (a?.creator?.rating ?? 0);
     });
   },
 });

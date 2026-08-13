@@ -9,19 +9,27 @@ import { getCurrentUser, type User as AuthUser } from '@/lib/auth';
 import { convex } from '@/lib/convex';
 import { api } from '@/convex/_generated/api';
 import { haptic, pressScale, spring } from '@/lib/haptics';
+import { type Id } from '@/convex/_generated/dataModel';
 
 interface Message {
-  _id: string;
-  senderId: string;
-  receiverId: string;
+  _id: Id<'messages'>;
+  senderId: Id<'users'>;
+  receiverId: Id<'users'>;
   text: string;
   createdAt: number;
 }
 
 interface PartnerInfo {
-  _id: string;
+  _id: Id<'users'>;
   username?: string;
   role?: string;
+}
+
+interface Conversation {
+  partnerId: Id<'users'>;
+  partnerUsername: string;
+  lastMessage?: Message;
+  unreadCount: number;
 }
 
 export default function MessagesPage() {
@@ -34,7 +42,7 @@ export default function MessagesPage() {
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [partner, setPartner] = useState<PartnerInfo | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [conversations, setConversations] = useState<any[]>([]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -62,7 +70,7 @@ export default function MessagesPage() {
         const convos = await convex.query(api.messages.getConversations, {
           userId: u._id,
         });
-        setConversations(convos as any[]);
+        setConversations(convos as Conversation[]);
       } catch (err) {
         console.error('Failed to initialize:', err);
         setError(err instanceof Error ? err.message : 'Failed to load');
@@ -82,14 +90,14 @@ export default function MessagesPage() {
       try {
         // Get partner info
         const partnerData = await convex.query(api.users.getById, {
-          userId: targetUserId as any,
+          userId: targetUserId as Id<'users'>,
         });
-        setPartner(partnerData as PartnerInfo);
+        setPartner(partnerData as PartnerInfo | null);
 
         // Get messages
         const thread = await convex.query(api.messages.getThread, {
           userId: currentUser._id,
-          partnerId: targetUserId as any,
+          partnerId: targetUserId as Id<'users'>,
         });
         setMessages(thread as Message[]);
       } catch (err) {
@@ -108,7 +116,7 @@ export default function MessagesPage() {
     try {
       await convex.mutation(api.messages.send, {
         senderId: currentUser._id,
-        receiverId: targetUserId as any,
+        receiverId: targetUserId as Id<'users'>,
         text: input.trim(),
       });
       
@@ -118,7 +126,7 @@ export default function MessagesPage() {
       // Reload messages
       const thread = await convex.query(api.messages.getThread, {
         userId: currentUser._id,
-        partnerId: targetUserId as any,
+        partnerId: targetUserId as Id<'users'>,
       });
       setMessages(thread as Message[]);
     } catch (err) {
@@ -141,24 +149,18 @@ export default function MessagesPage() {
 
     if (isCurrentUserBusiness && isPartnerCreator) {
       // Business paying creator - open payment flow
-      // Send payment request message first
       await convex.mutation(api.messages.send, {
         senderId: currentUser._id,
-        receiverId: targetUserId as any,
+        receiverId: targetUserId as Id<'users'>,
         text: '💰 sent payment request',
       });
-
-      // TODO: Open Razorpay checkout modal
-      console.log('Opening payment checkout...');
     } else if (!isCurrentUserBusiness && partner.role === 'business') {
       // Creator requesting payment from business
       await convex.mutation(api.messages.send, {
         senderId: currentUser._id,
-        receiverId: targetUserId as any,
-        text: '💰 requesting payment',
+        receiverId: targetUserId as Id<'users'>,
+        text: 'PAYMENT REQUEST',
       });
-      
-      console.log('Payment request sent');
     }
   };
 
@@ -200,7 +202,7 @@ export default function MessagesPage() {
           >
             <ArrowLeft size={20} />
           </button>
-          <h2 className="font-heading font-bold text-lg text-text">@{partner?.username || 'user'}</h2>
+          <h2 className="font-heading font-bold text-lg text-text">{partner?.username || 'user'}</h2>
         </header>
 
         <main className="flex-1 px-6 py-4 overflow-y-auto space-y-2">
@@ -285,30 +287,36 @@ export default function MessagesPage() {
             </p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {conversations.map((convo, i) => (
-              <motion.button
-                key={convo.partnerId}
-                initial={{ opacity: 0, y: 8 }}
+              <motion.div
+                key={String(convo.partnerId)}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ ...spring.default, delay: i * 0.02 }}
+                className="p-4 rounded-card bg-surface border border-border hover:border-text/40 transition-all cursor-pointer"
                 onClick={() => {
                   haptic.tap();
                   router.push(`/messages?user=${convo.partnerId}`);
                 }}
-                className="w-full p-4 rounded-card bg-surface border border-border text-left hover:border-text transition-all"
-                {...pressScale}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <h3 className="font-heading font-bold text-text">
-                      @{convo.partnerUsername || 'user'}
-                    </h3>
-                    <p className="text-xs text-muted mt-1 line-clamp-1">
-                      {convo.lastMessage?.text || 'no messages'}
-                    </p>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3 flex-1">
+                    <div className="w-10 h-10 rounded-full bg-elevated border border-border flex items-center justify-center font-heading font-bold text-text">
+                      {convo.partnerUsername?.[0]?.toUpperCase() ?? '?'}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-heading font-bold text-text">
+                        {convo.partnerUsername}
+                      </h3>
+                      <p className="text-muted text-xs font-mono mt-0.5">
+                        {convo.lastMessage?.text || 'no messages'}
+                      </p>
+                    </div>
                   </div>
-                  <span className="text-xs text-dim ml-2 whitespace-nowrap">
+                </div>
+                <div className="mt-3 pt-2.5 border-t border-border/50 flex items-center justify-between text-[11px] font-mono text-dim">
+                  <span className="text-muted">
                     {convo.lastMessage?.createdAt 
                       ? new Date(convo.lastMessage.createdAt).toLocaleDateString('en-IN', {
                           month: 'short',
@@ -316,8 +324,9 @@ export default function MessagesPage() {
                         })
                       : ''}
                   </span>
+                  <span className="text-text">open chat →</span>
                 </div>
-              </motion.button>
+              </motion.div>
             ))}
           </div>
         )}

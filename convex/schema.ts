@@ -136,6 +136,7 @@ export default defineSchema({
     userId: v.id('users'),
     type: v.string(),
     content: v.string(),
+    fromUserId: v.optional(v.id('users')),
     read: v.optional(v.boolean()),
     createdAt: v.number(),
   }).index('by_user', ['userId']),

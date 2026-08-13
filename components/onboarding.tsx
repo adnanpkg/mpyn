@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, ArrowLeft, Mail } from 'lucide-react';
-import { indianStates } from '@/lib/indian-data';
+import { worldCountries, type CountryData } from '@/lib/world-data';
 import { haptic, spring, pressScale } from '@/lib/haptics';
 import { sendOtp, verifyOtp } from '@/lib/auth';
 import { convex } from '@/lib/convex';
@@ -30,7 +30,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   const [direction, setDirection] = useState(1);
 
   // Onboarding data
-  const [selectedCountry, setSelectedCountry] = useState('India'); // Default to India
+  const [selectedCountry, setSelectedCountry] = useState('');
   const [selectedState, setSelectedState] = useState('');
   const [selectedCity, setSelectedCity] = useState('');
   const [role, setRole] = useState<'creator' | 'business' | ''>('');
@@ -40,6 +40,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [countrySearch, setCountrySearch] = useState('');
   const [stateSearch, setStateSearch] = useState('');
   const [citySearch, setCitySearch] = useState('');
 
@@ -67,10 +68,14 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
     setSigninStep((s) => Math.max(s - 1, 1) as SigninStep);
   }, [signinStep]);
 
-  const filteredStates = indianStates.filter((s) =>
+  const filteredCountries = worldCountries.filter((c) =>
+    c.name.toLowerCase().includes(countrySearch.toLowerCase())
+  );
+  const countryData = worldCountries.find((c) => c.name === selectedCountry);
+  const filteredStates = (countryData?.states ?? []).filter((s) =>
     s.name.toLowerCase().includes(stateSearch.toLowerCase())
   );
-  const stateData = indianStates.find((s) => s.name === selectedState);
+  const stateData = countryData?.states.find((s) => s.name === selectedState);
   const filteredCities = (stateData?.cities ?? []).filter((c) =>
     c.toLowerCase().includes(citySearch.toLowerCase())
   );
@@ -115,13 +120,14 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
         // Go to username step
         goSignupNext();
       } else {
-        // Sign-in: check if profile is complete
-        if (result.isNewUser || !result.user.username || !result.user.role) {
-          // New user who signed in — need to complete profile via signup flow
-          setMode('signup');
-          setSignupStep(1);
-        } else {
+        // Sign-in: if profile complete go straight home, never go to signup steps
+        if (result.user.username && result.user.role && result.user.city) {
           onComplete();
+        } else {
+          // Genuinely incomplete account — rare edge case, just complete from username step
+          // (they already have email verified so skip to username)
+          setMode('signup');
+          setSignupStep(7);
         }
       }
     } catch (e: unknown) {
@@ -275,11 +281,46 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             </StepWrapper>
           )}
 
-          {/* ── SIGNUP step 1 — state ────────────────────────── */}
+          {/* ── SIGNUP step 1 — country ─────────────────────── */}
           {mode === 'signup' && signupStep === 1 && (
             <StepWrapper key="s1" custom={direction}>
               <h1 className="font-heading font-bold text-3xl text-text mb-6 px-6 pt-16">
-                where are you?
+                where are you based?
+              </h1>
+              <div className="px-6 mb-4 relative">
+                <Search size={16} className="absolute left-9 top-1/2 -translate-y-1/2 text-dim" />
+                <input
+                  className="search-input pl-10"
+                  placeholder="search country..."
+                  value={countrySearch}
+                  onChange={(e) => setCountrySearch(e.target.value)}
+                />
+              </div>
+              <div className="flex-1 overflow-y-auto px-6 space-y-2 pb-8">
+                {filteredCountries.map((c) => (
+                  <motion.button
+                    key={c.code}
+                    className={selectedCountry === c.name ? 'list-item-selected' : 'list-item'}
+                    onClick={() => {
+                      haptic.tap();
+                      setSelectedCountry(c.name);
+                      setCountrySearch('');
+                      setTimeout(goSignupNext, 200);
+                    }}
+                    {...pressScale}
+                  >
+                    {c.name}
+                  </motion.button>
+                ))}
+              </div>
+            </StepWrapper>
+          )}
+
+          {/* ── SIGNUP step 2 — state ────────────────────────── */}
+          {mode === 'signup' && signupStep === 2 && (
+            <StepWrapper key="s2" custom={direction}>
+              <h1 className="font-heading font-bold text-3xl text-text mb-6 px-6 pt-16">
+                which state?
               </h1>
               <div className="px-6 mb-4 relative">
                 <Search size={16} className="absolute left-9 top-1/2 -translate-y-1/2 text-dim" />
@@ -310,13 +351,12 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             </StepWrapper>
           )}
 
-          {/* ── SIGNUP step 2 — city ─────────────────────────── */}
-          {mode === 'signup' && signupStep === 2 && (
-            <StepWrapper key="s2" custom={direction}>
-              <h1 className="font-heading font-bold text-3xl text-text mb-1 px-6 pt-16">
-                your city.
+          {/* ── SIGNUP step 3 — city ─────────────────────────── */}
+          {mode === 'signup' && signupStep === 3 && (
+            <StepWrapper key="s3" custom={direction}>
+              <h1 className="font-heading font-bold text-3xl text-text mb-6 px-6 pt-16">
+                your city?
               </h1>
-              <p className="text-muted text-sm font-body mb-6 px-6">{selectedState}</p>
               <div className="px-6 mb-4 relative">
                 <Search size={16} className="absolute left-9 top-1/2 -translate-y-1/2 text-dim" />
                 <input
@@ -346,65 +386,57 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             </StepWrapper>
           )}
 
-          {/* ── SIGNUP step 3 — role ─────────────────────────── */}
-          {mode === 'signup' && signupStep === 3 && (
-            <StepWrapper key="s3" custom={direction}>
-              <h1 className="font-heading font-bold text-3xl text-text mb-8 px-6 pt-16">
-                you are a...
-              </h1>
-              <div className="px-6 space-y-4">
-                {(['creator', 'business'] as const).map((r) => (
-                  <motion.button
-                    key={r}
-                    className={`w-full p-6 rounded-card border transition-all flex items-center gap-4 ${
-                      role === r
-                        ? 'bg-text border-text text-bg'
-                        : 'bg-bg border-border text-text'
-                    }`}
-                    onClick={() => {
-                      haptic.tap();
-                      setRole(r);
-                      setTimeout(goSignupNext, 250);
-                    }}
-                    whileTap={{ scale: 0.96 }}
-                    transition={spring.default}
-                  >
-                    <span className="text-3xl">{r === 'creator' ? '*' : '🏢'}</span>
-                    <div className="text-left">
-                      <p className="font-heading font-bold text-lg capitalize">{r}</p>
-                      <p className={`text-sm font-body ${role === r ? 'text-bg/70' : 'text-muted'}`}>
-                        {r === 'creator'
-                          ? 'create content, get paid'
-                          : 'find creators, grow your brand'}
-                      </p>
-                    </div>
-                  </motion.button>
-                ))}
-              </div>
-            </StepWrapper>
-          )}
-
-          {/* ── SIGNUP step 4 — country ──────────────────────── */}
+          {/* ── SIGNUP step 4 — role ─────────────────────────── */}
           {mode === 'signup' && signupStep === 4 && (
             <StepWrapper key="s4" custom={direction}>
-              <div className="flex flex-col px-6 pt-16">
-                <h1 className="font-heading font-bold text-3xl text-text mb-8">where are you from?</h1>
-                <div className="space-y-2">
-                  <motion.button
-                    className="w-full p-4 rounded-card border border-border bg-surface text-left hover:border-text transition-all"
-                    onClick={() => {
-                      haptic.tap();
-                      setSelectedCountry('India');
-                      goSignupNext();
-                    }}
-                    whileTap={{ scale: 0.96 }}
-                    transition={spring.default}
-                  >
-                    <p className="font-heading font-bold text-text">India</p>
-                    <p className="text-xs text-muted mt-1">connecting creators & businesses</p>
-                  </motion.button>
-                </div>
-                <p className="text-xs text-dim mt-6 text-center">more countries coming soon</p>
+              <h1 className="font-heading font-bold text-3xl text-text mb-8 px-6 pt-16">
+                what are you here for?
+              </h1>
+              <div className="px-6 space-y-4">
+                <motion.button
+                  className={`w-full p-6 rounded-card border transition-all flex items-center gap-4 ${
+                    role === 'creator'
+                      ? 'bg-text border-text text-bg'
+                      : 'bg-bg border-border text-text'
+                  }`}
+                  onClick={() => {
+                    haptic.tap();
+                    setRole('creator');
+                    setTimeout(goSignupNext, 250);
+                  }}
+                  whileTap={{ scale: 0.96 }}
+                  transition={spring.default}
+                >
+                  <span className="text-3xl">*</span>
+                  <div className="text-left">
+                    <p className="font-heading font-bold text-lg">i create content</p>
+                    <p className={`text-sm font-body ${role === 'creator' ? 'text-bg/70' : 'text-muted'}`}>
+                      reels, videos, collabs
+                    </p>
+                  </div>
+                </motion.button>
+                <motion.button
+                  className={`w-full p-6 rounded-card border transition-all flex items-center gap-4 ${
+                    role === 'business'
+                      ? 'bg-text border-text text-bg'
+                      : 'bg-bg border-border text-text'
+                  }`}
+                  onClick={() => {
+                    haptic.tap();
+                    setRole('business');
+                    setTimeout(goSignupNext, 250);
+                  }}
+                  whileTap={{ scale: 0.96 }}
+                  transition={spring.default}
+                >
+                  <span className="text-3xl">🏢</span>
+                  <div className="text-left">
+                    <p className="font-heading font-bold text-lg">i run a business</p>
+                    <p className={`text-sm font-body ${role === 'business' ? 'text-bg/70' : 'text-muted'}`}>
+                      find local creators
+                    </p>
+                  </div>
+                </motion.button>
               </div>
             </StepWrapper>
           )}
@@ -413,10 +445,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
           {mode === 'signup' && signupStep === 5 && (
             <StepWrapper key="s5" custom={direction}>
               <div className="flex flex-col px-6 pt-16">
-                <h1 className="font-heading font-bold text-3xl text-text mb-2">your email.</h1>
-                <p className="text-muted text-sm font-body mb-8">
-                  we'll send a 6-digit code to verify
-                </p>
+                <h1 className="font-heading font-bold text-3xl text-text mb-8">let's get you in</h1>
                 <input
                   className="search-input mb-4"
                   type="email"

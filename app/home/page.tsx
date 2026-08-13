@@ -11,30 +11,33 @@ import { api } from '@/convex/_generated/api';
 import { CONTENT_CATEGORIES } from '@/lib/categories';
 import { haptic, pressScale, spring } from '@/lib/haptics';
 
-interface FeedUser {
+interface FeedGig {
   _id: string;
-  username?: string;
-  role?: string;
-  city?: string;
-  state?: string;
-  isPro?: boolean;
-  rating?: number;
-  ordersCount?: number;
-  profile?: {
-    gigCharge?: number;
-    bio?: string;
-    contentCategories?: string[];
-    description?: string;
-    name?: string;
-    category?: string;
-  } | null;
+  title: string;
+  description?: string;
+  charge: number;
+  createdAt: number;
+  creator: {
+    _id: string;
+    username?: string;
+    city?: string;
+    state?: string;
+    isPro?: boolean;
+    rating?: number;
+    ordersCount?: number;
+    profile?: {
+      bio?: string;
+      contentCategories?: string[];
+      instagramHandle?: string;
+    } | null;
+  };
 }
 
 export default function HomePage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [feedItems, setFeedItems] = useState<FeedUser[]>([]);
+  const [feedGigs, setFeedGigs] = useState<FeedGig[]>([]);
   const [fetchingFeed, setFetchingFeed] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -52,7 +55,7 @@ export default function HomePage() {
           city: u.city,
           role: u.role,
         });
-        setFeedItems(feed as FeedUser[]);
+        setFeedGigs(feed as FeedGig[]);
       } catch (e) {
         console.error('feed error:', e);
       } finally {
@@ -79,19 +82,27 @@ export default function HomePage() {
     );
   }
 
-  const filteredItems = feedItems.filter((item) => {
-    const name = item.username ?? '';
-    const bio = item.profile?.bio ?? item.profile?.description ?? '';
+  const filteredGigs = feedGigs.filter((gig) => {
+    const title = gig.title ?? '';
+    const description = gig.description ?? '';
+    const creatorName = gig.creator?.username ?? '';
+    const bio = gig.creator?.profile?.bio ?? '';
+    
     const matchesSearch =
-      name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      creatorName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       bio.toLowerCase().includes(searchQuery.toLowerCase());
+    
     const matchesCategory =
       !selectedCategory ||
-      (item.profile?.contentCategories?.includes(selectedCategory) ?? false);
+      (gig.creator?.profile?.contentCategories?.includes(selectedCategory) ?? false);
+    
     return matchesSearch && matchesCategory;
   });
 
-  const targetLabel = user?.role === 'creator' ? 'businesses' : 'creators';
+  // Show category filters only for businesses
+  const showCategories = user?.role === 'business';
 
   return (
     <div className="app-container bg-bg pb-24 min-h-screen relative">
@@ -108,14 +119,13 @@ export default function HomePage() {
           <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
           <input
             className="search-input pl-10 pr-4 py-2.5 text-sm"
-            placeholder={`search ${targetLabel} in ${user?.city}...`}
+            placeholder={`search gigs in ${user?.city}...`}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
 
-        {/* Category pills — only relevant for creator-mode (browsing businesses) */}
-        {user?.role === 'business' && (
+        {showCategories && (
           <div className="flex gap-2 overflow-x-auto pt-3 pb-1 no-scrollbar">
             <button
               onClick={() => { haptic.tap(); setSelectedCategory(null); }}
@@ -151,75 +161,72 @@ export default function HomePage() {
               <div key={i} className="skeleton w-full h-32 rounded-card" />
             ))}
           </div>
-        ) : filteredItems.length === 0 ? (
+        ) : filteredGigs.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <span className="text-4xl mb-3">*</span>
             <p className="font-heading font-bold text-lg text-text mb-1">
-              no {targetLabel} found
+              no gigs found
             </p>
             <p className="text-muted text-xs font-body max-w-[260px]">
-              no {targetLabel} listed in {user?.city} yet. be the first or tap + to post a gig!
+              {user?.role === 'business' 
+                ? `no open gigs in ${user?.city} yet. check back soon!`
+                : 'tap + in gigs tab to post your first gig'}
             </p>
           </div>
         ) : (
           <div className="space-y-3">
-            {filteredItems.map((item, i) => {
-              const displayName =
-                item.role === 'business'
-                  ? (item.profile?.name ?? item.username ?? 'business')
-                  : (item.username ?? 'creator');
-              const bio =
-                item.profile?.bio ??
-                item.profile?.description ??
-                (item.profile?.category ? `${item.profile.category}` : '');
-              const charge = item.profile?.gigCharge;
+            {filteredGigs.map((gig, i) => {
+              const creatorName = gig.creator?.username ?? 'creator';
+              const bio = gig.creator?.profile?.bio ?? '';
 
               return (
                 <motion.div
-                  key={item._id}
+                  key={gig._id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ ...spring.default, delay: i * 0.02 }}
                   className="p-4 rounded-card bg-surface border border-border hover:border-text/40 transition-all cursor-pointer"
-                  onClick={() => { haptic.tap(); router.push(`/messages?user=${item._id}`); }}
+                  onClick={() => { haptic.tap(); router.push(`/messages?user=${gig.creator._id}`); }}
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-3 flex-1">
                       <div className="w-10 h-10 rounded-full bg-elevated border border-border flex items-center justify-center font-heading font-bold text-text">
-                        {displayName[0]?.toUpperCase() ?? '?'}
+                        {creatorName[0]?.toUpperCase() ?? '?'}
                       </div>
-                      <div>
-                        <div className="flex items-center gap-1.5">
-                          <h3 className="font-heading font-bold text-text text-base">
-                            {item.role === 'business' ? displayName : `@${displayName}`}
-                          </h3>
-                          {item.isPro && (
-                            <span className="text-text text-xs" title="Pro subscriber">*</span>
+                      <div className="flex-1">
+                        <h3 className="font-heading font-bold text-text text-base">
+                          {gig.title}
+                        </h3>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <p className="text-muted text-xs font-mono">
+                            @{creatorName}
+                          </p>
+                          {gig.creator?.isPro && (
+                            <span className="text-text text-xs" title="Pro creator">*</span>
                           )}
                         </div>
-                        <p className="text-muted text-xs font-mono">
-                          {item.city}, {item.state}
-                        </p>
                       </div>
                     </div>
-                    {charge && (
-                      <span className="text-xs font-mono font-bold text-text bg-elevated px-2.5 py-1 rounded-full border border-border">
-                        ₹{charge}
-                      </span>
-                    )}
+                    <span className="text-sm font-mono font-bold text-text bg-elevated px-3 py-1.5 rounded-full border border-border">
+                      ₹{gig.charge}
+                    </span>
                   </div>
 
-                  {bio && (
-                    <p className="text-muted text-xs font-body mt-2.5 line-clamp-2">{bio}</p>
+                  {gig.description && (
+                    <p className="text-muted text-xs font-body mb-2.5 line-clamp-2">{gig.description}</p>
                   )}
 
-                  <div className="mt-3 pt-2.5 border-t border-border/50 flex items-center justify-between text-[11px] font-mono text-dim">
+                  {bio && (
+                    <p className="text-dim text-[11px] font-mono mb-2.5 line-clamp-1 italic">{bio}</p>
+                  )}
+
+                  <div className="pt-2.5 border-t border-border/50 flex items-center justify-between text-[11px] font-mono text-dim">
                     <div className="flex items-center gap-3">
                       <span className="flex items-center gap-1 text-muted">
                         <Star size={11} className="text-text fill-text" />
-                        {item.rating && item.rating > 0 ? item.rating.toFixed(1) : '—'}
+                        {gig.creator?.rating && gig.creator.rating > 0 ? gig.creator.rating.toFixed(1) : '—'}
                       </span>
-                      <span>{item.ordersCount ?? 0} orders</span>
+                      <span>{gig.creator?.ordersCount ?? 0} orders</span>
                     </div>
                     <span className="text-text">chat & deal →</span>
                   </div>

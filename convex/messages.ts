@@ -24,6 +24,20 @@ export const getConversations = query({
     const conversations = await Promise.all(
       Array.from(partnerIds).map(async (partnerId) => {
         const partner = await ctx.db.get(partnerId as any);
+        
+        // Try to get profile name for businesses
+        let displayName = partner?.username;
+        if (!displayName && partner?.role === 'business') {
+          const bp = await ctx.db
+            .query('businessProfiles')
+            .withIndex('by_user', (q) => q.eq('userId', partnerId as any))
+            .first();
+          displayName = bp?.name || 'business';
+        }
+        if (!displayName) {
+          displayName = partner?.role || 'user';
+        }
+        
         const allMsgs = [
           ...sent.filter((m) => m.receiverId === partnerId),
           ...received.filter((m) => m.senderId === partnerId),
@@ -34,12 +48,18 @@ export const getConversations = query({
           (m) => m.senderId === partnerId && !m.read
         ).length;
 
-        return { partner, lastMessage: last, unreadCount };
+        // Return flat object for frontend
+        return {
+          partnerId: partner?._id,
+          partnerUsername: displayName,
+          lastMessage: last,
+          unreadCount,
+        };
       })
     );
 
     return conversations
-      .filter((c) => c.partner)
+      .filter((c) => c.partnerId)
       .sort((a, b) => (b.lastMessage?.createdAt ?? 0) - (a.lastMessage?.createdAt ?? 0));
   },
 });
@@ -77,6 +97,10 @@ export const send = mutation({
     gigId: v.optional(v.id('gigs')),
   },
   handler: async (ctx, { senderId, receiverId, text, gigId }) => {
+    // Get sender info for notification
+    const sender = await ctx.db.get(senderId);
+    const senderUsername = sender?.username || 'a user';
+
     const msgId = await ctx.db.insert('messages', {
       senderId,
       receiverId,
@@ -90,7 +114,8 @@ export const send = mutation({
     await ctx.db.insert('notifications', {
       userId: receiverId,
       type: 'new_message',
-      content: `new message from a ${gigId ? 'gig partner' : 'user'}.`,
+      content: `@${senderUsername} sent a message`,
+      fromUserId: senderId,
       read: false,
       createdAt: Date.now(),
     });
