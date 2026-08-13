@@ -96,7 +96,7 @@ export const create = mutation({
 
     // Create review (gigId is optional for profile reviews)
     const reviewId = await ctx.db.insert('reviews', {
-      gigId: gigId as any,
+      gigId: gigId || undefined,
       reviewerId,
       revieweeId,
       rating,
@@ -169,7 +169,7 @@ export const getStats = query({
     if (reviews.length === 0) {
       return {
         totalReviews: 0,
-        averageRating: 5.0,
+        averageRating: 0,
         ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
       };
     }
