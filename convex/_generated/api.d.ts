@@ -12,6 +12,7 @@ import type * as auth from "../auth.js";
 import type * as gigs from "../gigs.js";
 import type * as messages from "../messages.js";
 import type * as notifications from "../notifications.js";
+import type * as offers from "../offers.js";
 import type * as reviews from "../reviews.js";
 import type * as subscriptions from "../subscriptions.js";
 import type * as users from "../users.js";
@@ -27,6 +28,7 @@ declare const fullApi: ApiFromModules<{
   gigs: typeof gigs;
   messages: typeof messages;
   notifications: typeof notifications;
+  offers: typeof offers;
   reviews: typeof reviews;
   subscriptions: typeof subscriptions;
   users: typeof users;

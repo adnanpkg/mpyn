@@ -151,6 +151,7 @@ export default function GigCompletion({
             gigTitle={gig.title}
             revieweeId={reviewInfo.revieweeId!}
             revieweeName={reviewInfo.revieweeName!}
+            reviewerId={currentUserId}
             isOpen={showRatingDialog}
             onClose={() => setShowRatingDialog(false)}
             onSubmit={handleSubmitReview}

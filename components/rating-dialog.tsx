@@ -46,10 +46,9 @@ export default function RatingDialog({
         // Default: submit review via Convex API
         const { convex } = await import('@/lib/convex');
         const { api } = await import('@/convex/_generated/api');
-        const { Id } = await import('@/convex/_generated/dataModel');
         
         await convex.mutation(api.reviews.create, {
-          gigId: gigId ? (gigId as any) : undefined,
+          gigId: gigId as any,
           revieweeId: revieweeId as any,
           reviewerId: reviewerId as any,
           rating,

@@ -144,7 +144,7 @@ export const getForUser = query({
     const reviewsWithInfo = await Promise.all(
       reviews.map(async (review) => {
         const reviewer = await ctx.db.get(review.reviewerId);
-        const gig = await ctx.db.get(review.gigId);
+        const gig = review.gigId ? await ctx.db.get(review.gigId) : null;
         return {
           ...review,
           reviewer,
