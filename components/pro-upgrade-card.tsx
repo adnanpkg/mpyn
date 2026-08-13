@@ -84,7 +84,7 @@ export default function ProUpgradeCard({
     
     return (
       <motion.div 
-        className="border border-border rounded-[20px] p-4 mb-6 bg-surface"
+        className="border border-border rounded-[20px] p-4 mb-6 bg-surface card-soft"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: 'spring', ...springConfig }}
@@ -114,7 +114,7 @@ export default function ProUpgradeCard({
 
   return (
     <motion.div 
-      className="border border-border rounded-[20px] p-5 mb-6 bg-elevated"
+      className="border border-border rounded-[20px] p-5 mb-6 bg-elevated card-elevated"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: 'spring', ...springConfig }}
@@ -147,7 +147,7 @@ export default function ProUpgradeCard({
       </div>
 
       {/* Savings breakdown */}
-      <div className="bg-surface border border-border rounded-[14px] p-3 mb-5">
+      <div className="bg-surface border border-border rounded-[14px] p-3 mb-5 card-soft">
         <p className="font-heading font-bold text-xs text-text mb-3">
           your savings
         </p>

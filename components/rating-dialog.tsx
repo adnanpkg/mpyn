@@ -61,13 +61,13 @@ export default function RatingDialog({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 sm:p-6">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 sm:p-6 backdrop-blur-sm">
       <motion.div
         initial={{ scale: 0.9, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.9, opacity: 0, y: 20 }}
         transition={{ type: 'spring', ...springConfig }}
-        className="bg-bg border border-border rounded-[20px] w-full max-w-md overflow-hidden"
+        className="bg-bg border border-border rounded-[20px] w-full max-w-md overflow-hidden card-elevated"
       >
         {/* Header */}
         <div className="px-5 sm:px-6 pt-5 sm:pt-6 pb-4 border-b border-border flex items-center justify-between">
@@ -142,7 +142,7 @@ export default function RatingDialog({
           {/* Review text - Responsive */}
           <div>
             <textarea
-              className="w-full p-3 sm:p-4 bg-surface border border-border rounded-[14px] text-sm text-text placeholder:text-muted resize-none focus:border-text focus:outline-none transition-colors"
+              className="w-full p-3 sm:p-4 bg-surface border border-border rounded-[14px] text-sm text-text placeholder:text-muted resize-none focus:border-text focus:outline-none transition-colors input-soft"
               placeholder="share your experience (optional)..."
               rows={3}
               value={reviewText}
@@ -160,7 +160,7 @@ export default function RatingDialog({
         <div className="px-5 sm:px-6 pb-5 sm:pb-6 border-t border-border pt-4 flex gap-3 sm:gap-4">
           <button
             onClick={handleClose}
-            className="flex-1 py-3 px-3 sm:px-4 rounded-full border border-border text-muted hover:bg-surface font-heading font-bold text-sm transition-colors"
+            className="flex-1 py-3 px-3 sm:px-4 rounded-full border border-border text-muted hover:bg-surface font-heading font-bold text-sm transition-colors btn-soft"
           >
             skip
           </button>

@@ -192,13 +192,13 @@ export default function MessagesPage() {
 
     return (
       <div className="app-container bg-bg min-h-screen flex flex-col pb-24">
-        <header className="px-6 pt-14 pb-4 border-b border-border">
+        <header className="px-6 pt-14 pb-4 border-b border-border card-soft">
           <button
             onClick={() => {
               haptic.tap();
               router.push('/messages');
             }}
-            className="mb-2 text-muted hover:text-text"
+            className="mb-2 text-muted hover:text-text btn-soft"
           >
             <ArrowLeft size={20} />
           </button>
@@ -220,8 +220,8 @@ export default function MessagesPage() {
                     <div
                       className={`max-w-xs px-3 py-2 rounded-[14px] text-xs ${
                         isMine
-                          ? 'bg-text text-bg'
-                          : 'bg-surface text-text border border-border'
+                          ? 'bg-text text-bg btn-soft-primary'
+                          : 'bg-surface text-text border border-border btn-soft'
                       }`}
                     >
                       {msg.text}
@@ -235,10 +235,10 @@ export default function MessagesPage() {
         </main>
 
         {/* Payment / Request button + Message input */}
-        <div className="px-6 py-3 border-t border-border bg-bg">
+        <div className="px-6 py-3 border-t border-border bg-bg card-soft">
           <div className="flex gap-2">
             <input
-              className="flex-1 bg-surface border border-border px-3 py-2 rounded-[14px] text-xs text-text outline-none"
+              className="flex-1 bg-surface border border-border px-3 py-2 rounded-[14px] text-xs text-text outline-none input-soft"
               placeholder="message..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -248,7 +248,7 @@ export default function MessagesPage() {
             {(showPayButton || showRequestButton) && (
               <button
                 onClick={handlePaymentClick}
-                className="px-3 py-2 bg-text text-bg rounded-full text-xs font-bold hover:opacity-80"
+                className="px-3 py-2 bg-text text-bg rounded-full text-xs font-bold hover:opacity-80 btn-soft-primary"
                 title={showPayButton ? 'Send payment request' : 'Request payment'}
               >
                 {showPayButton ? 'PAY' : 'REQ'}
@@ -257,7 +257,7 @@ export default function MessagesPage() {
             <button
               onClick={sendMessage}
               disabled={!input.trim() || sending}
-              className="px-4 py-2 bg-text text-bg rounded-full text-xs font-bold disabled:opacity-50"
+              className="px-4 py-2 bg-text text-bg rounded-full text-xs font-bold disabled:opacity-50 btn-soft-primary"
             >
               send
             </button>
@@ -294,7 +294,7 @@ export default function MessagesPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ ...spring.default, delay: i * 0.02 }}
-                className="p-4 rounded-card bg-surface border border-border hover:border-text/40 transition-all cursor-pointer"
+                className="p-4 rounded-card bg-surface border border-border hover:border-text/40 transition-all cursor-pointer card-soft"
                 onClick={() => {
                   haptic.tap();
                   router.push(`/messages?user=${convo.partnerId}`);
@@ -302,7 +302,7 @@ export default function MessagesPage() {
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3 flex-1">
-                    <div className="w-10 h-10 rounded-full bg-elevated border border-border flex items-center justify-center font-heading font-bold text-text">
+                    <div className="w-10 h-10 rounded-full bg-elevated border border-border flex items-center justify-center font-heading font-bold text-text btn-soft">
                       {convo.partnerUsername?.[0]?.toUpperCase() ?? '?'}
                     </div>
                     <div className="flex-1">

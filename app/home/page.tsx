@@ -131,8 +131,8 @@ export default function HomePage() {
               onClick={() => { haptic.tap(); setSelectedCategory(null); }}
               className={`px-3 py-1 rounded-full text-xs font-mono whitespace-nowrap transition-all ${
                 selectedCategory === null
-                  ? 'bg-text text-bg font-bold'
-                  : 'bg-surface text-muted border border-border'
+                  ? 'bg-text text-bg font-bold btn-soft-primary'
+                  : 'bg-surface text-muted border border-border btn-soft'
               }`}
             >
               all
@@ -143,8 +143,8 @@ export default function HomePage() {
                 onClick={() => { haptic.tap(); setSelectedCategory(cat === selectedCategory ? null : cat); }}
                 className={`px-3 py-1 rounded-full text-xs font-mono whitespace-nowrap transition-all ${
                   selectedCategory === cat
-                    ? 'bg-text text-bg font-bold'
-                    : 'bg-surface text-muted border border-border'
+                    ? 'bg-text text-bg font-bold btn-soft-primary'
+                    : 'bg-surface text-muted border border-border btn-soft'
                 }`}
               >
                 {cat.toLowerCase()}
@@ -185,12 +185,12 @@ export default function HomePage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ ...spring.default, delay: i * 0.02 }}
-                  className="p-4 rounded-card bg-surface border border-border hover:border-text/40 transition-all cursor-pointer"
+                  className="p-4 rounded-card bg-surface border border-border hover:border-text/40 transition-all cursor-pointer card-soft"
                   onClick={() => { haptic.tap(); router.push(`/messages?user=${gig.creator._id}`); }}
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-3 flex-1">
-                      <div className="w-10 h-10 rounded-full bg-elevated border border-border flex items-center justify-center font-heading font-bold text-text">
+                      <div className="w-10 h-10 rounded-full bg-elevated border border-border flex items-center justify-center font-heading font-bold text-text btn-soft">
                         {creatorName[0]?.toUpperCase() ?? '?'}
                       </div>
                       <div className="flex-1">
@@ -207,7 +207,7 @@ export default function HomePage() {
                         </div>
                       </div>
                     </div>
-                    <span className="text-sm font-mono font-bold text-text bg-elevated px-3 py-1.5 rounded-full border border-border">
+                    <span className="text-sm font-mono font-bold text-text bg-elevated px-3 py-1.5 rounded-full border border-border btn-soft">
                       ₹{gig.charge}
                     </span>
                   </div>

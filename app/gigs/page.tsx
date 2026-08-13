@@ -86,7 +86,7 @@ export default function GigsPage() {
         </div>
         <a
           href="tel:+919876543210"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface border border-border text-xs font-mono text-text"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface border border-border text-xs font-mono text-text btn-soft"
           onClick={() => haptic.tap()}
         >
           <PhoneCall size={12} />
@@ -116,7 +116,7 @@ export default function GigsPage() {
               return (
                 <div
                   key={gig._id}
-                  className="p-4 rounded-card bg-surface border border-border space-y-3"
+                  className="p-4 rounded-card bg-surface border border-border space-y-3 card-soft"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -130,12 +130,12 @@ export default function GigsPage() {
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-2">
-                      <span className="text-text font-mono font-bold text-sm bg-elevated px-2.5 py-1 rounded-full border border-border">
+                      <span className="text-text font-mono font-bold text-sm bg-elevated px-2.5 py-1 rounded-full border border-border btn-soft">
                         ₹{gig.charge}
                       </span>
                       {isCreator && gig.status === 'open' && (
                         <motion.button
-                          className="p-1.5 rounded-full bg-red-500/10 text-red-500 border border-red-500/20"
+                          className="p-1.5 rounded-full bg-red-500/10 text-red-500 border border-red-500/20 btn-soft"
                           onClick={() => handleDelete(gig._id)}
                           {...pressScale}
                           title="delete gig"
@@ -185,7 +185,7 @@ export default function GigsPage() {
       </main>
 
       <motion.button
-        className="fixed bottom-24 right-6 z-30 w-14 h-14 rounded-full bg-text text-bg flex items-center justify-center shadow-2xl border border-bg"
+        className="fixed bottom-24 right-6 z-30 w-14 h-14 rounded-full bg-text text-bg flex items-center justify-center shadow-2xl border border-bg btn-soft-primary"
         onClick={() => { haptic.tap(); router.push('/create-gig'); }}
         {...pressScale}
       >

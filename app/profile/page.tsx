@@ -77,7 +77,7 @@ export default function ProfilePage() {
       <main className="px-6">
         {/* Avatar + name */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-20 h-20 rounded-full bg-elevated border border-border flex items-center justify-center text-2xl font-heading font-bold mb-4">
+          <div className="w-20 h-20 rounded-full bg-elevated border border-border flex items-center justify-center text-2xl font-heading font-bold mb-4 btn-soft">
             {user?.username?.slice(0, 2).toUpperCase() || '?'}
           </div>
           <h2 className="font-heading font-bold text-xl text-text">
@@ -87,11 +87,11 @@ export default function ProfilePage() {
             {user?.role} · {user?.city}, {user?.state}
           </p>
           {user?.isPro && (user as any)?.proExpiresAt && (user as any)?.proExpiresAt > Date.now() ? (
-            <span className="mt-2 px-3 py-1 rounded-full bg-text text-bg text-xs font-mono font-bold">
+            <span className="mt-2 px-3 py-1 rounded-full bg-text text-bg text-xs font-mono font-bold btn-soft-primary">
               * pro
             </span>
           ) : user?.isPro ? (
-            <span className="mt-2 px-3 py-1 rounded-full bg-gray-400 text-white text-xs font-mono font-bold">
+            <span className="mt-2 px-3 py-1 rounded-full bg-gray-400 text-white text-xs font-mono font-bold btn-soft">
               pro expired
             </span>
           ) : null}
@@ -99,13 +99,13 @@ export default function ProfilePage() {
 
         {/* Stats row */}
         <div className="flex gap-3 mb-8">
-          <div className="flex-1 p-3 rounded-card bg-surface border border-border text-center">
+          <div className="flex-1 p-3 rounded-card bg-surface border border-border text-center card-soft">
             <p className="font-heading font-bold text-xl text-text">{user?.ordersCount ?? 0}</p>
             <p className="text-dim text-[10px] font-mono flex items-center justify-center gap-1 mt-0.5">
               <Briefcase size={10} /> orders
             </p>
           </div>
-          <div className="flex-1 p-3 rounded-card bg-surface border border-border text-center">
+          <div className="flex-1 p-3 rounded-card bg-surface border border-border text-center card-soft">
             <p className="font-heading font-bold text-xl text-text">
               {user?.rating && user.rating > 0 ? user.rating.toFixed(1) : '—'}
             </p>
@@ -137,7 +137,7 @@ export default function ProfilePage() {
                   {creatorProfile.contentCategories.map((cat) => (
                     <span
                       key={cat}
-                      className="px-3 py-1 rounded-pill bg-surface border border-border text-text text-xs font-body"
+                      className="px-3 py-1 rounded-pill bg-surface border border-border text-text text-xs font-body btn-soft"
                     >
                       {cat}
                     </span>
@@ -241,7 +241,7 @@ export default function ProfilePage() {
 
         {/* Sign out */}
         <motion.button
-          className="w-full py-3 text-red-500 text-sm font-mono border border-red-500/20 rounded-pill hover:bg-red-500/5 transition-colors"
+          className="w-full py-3 text-red-500 text-sm font-mono border border-red-500/20 rounded-pill hover:bg-red-500/5 transition-colors btn-soft"
           onClick={handleSignOut}
           {...pressScale}
         >
