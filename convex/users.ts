@@ -162,18 +162,15 @@ export const saveBusinessProfile = mutation({
   },
 });
 
-// Get feed: open gigs in same city with creator info (for home page)
+// Get feed: ALL open gigs in same city (visible to everyone including poster)
 export const getFeed = query({
   args: {
     city: v.string(),
     role: v.union(v.literal('creator'), v.literal('business')),
   },
   handler: async (ctx, { city, role }) => {
-    // Businesses see creator gigs, creators see business gigs (but we only have creator gigs)
-    // So only show gigs when user is a business
-    if (role !== 'business') {
-      return []; // Creators don't browse gigs — they create them
-    }
+    // Show open gigs to EVERYONE in the same city (businesses AND creators)
+    // Gigs go live immediately, visible to all including poster
 
     // Get all open gigs
     const allGigs = await ctx.db

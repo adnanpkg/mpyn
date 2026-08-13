@@ -137,14 +137,16 @@ export const openProSubscriptionCheckout = async (
   onError: (error: any) => void
 ) => {
   try {
+    console.log('Opening Pro checkout for:', { userId, userEmail });
+    
     // Load Razorpay script
     const isLoaded = await loadRazorpayScript();
     if (!isLoaded) {
       throw new Error('Failed to load Razorpay');
     }
 
-    // Create subscription
-    const subResponse = await fetch('/api/razorpay/create-subscription', {
+    // Create order for Pro (one-time payment)
+    const orderResponse = await fetch('/api/razorpay/create-subscription', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -153,20 +155,23 @@ export const openProSubscriptionCheckout = async (
       }),
     });
 
-    if (!subResponse.ok) {
-      throw new Error('Failed to create subscription');
+    if (!orderResponse.ok) {
+      const errorData = await orderResponse.json();
+      console.error('Order creation failed:', errorData);
+      throw new Error(errorData.error || 'Failed to create order');
     }
 
-    const subData = await subResponse.json();
+    const orderData = await orderResponse.json();
+    console.log('Order created:', orderData);
 
-    // Open Razorpay checkout for subscription
+    // Open Razorpay checkout for one-time payment
     const options: RazorpayOptions = {
-      key: subData.key,
-      amount: subData.amount,
-      currency: subData.currency,
-      subscription_id: subData.subscriptionId,
+      key: orderData.key,
+      amount: orderData.amount,
+      currency: orderData.currency,
+      order_id: orderData.orderId,
       name: 'multiply.',
-      description: 'Pro Subscription - ₹190/month',
+      description: 'Pro Subscription - ₹190 for 30 days',
       handler: onSuccess,
       prefill: {
         email: userEmail,
@@ -180,7 +185,7 @@ export const openProSubscriptionCheckout = async (
       },
       modal: {
         ondismiss: () => {
-          console.log('Subscription payment cancelled by user');
+          console.log('Payment cancelled by user');
         },
       },
     };
@@ -189,7 +194,7 @@ export const openProSubscriptionCheckout = async (
     razorpayInstance.open();
 
   } catch (error) {
-    console.error('Subscription checkout error:', error);
+    console.error('Checkout error:', error);
     onError(error);
   }
 };

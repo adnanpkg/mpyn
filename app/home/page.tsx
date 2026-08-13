@@ -131,8 +131,8 @@ export default function HomePage() {
               onClick={() => { haptic.tap(); setSelectedCategory(null); }}
               className={`px-3 py-1 rounded-full text-xs font-mono whitespace-nowrap transition-all ${
                 selectedCategory === null
-                  ? 'bg-text text-bg font-bold btn-soft-primary'
-                  : 'bg-surface text-muted border border-border btn-soft'
+                  ? 'bg-text text-bg font-bold'
+                  : 'bg-surface text-muted border border-border'
               }`}
             >
               all
@@ -143,8 +143,8 @@ export default function HomePage() {
                 onClick={() => { haptic.tap(); setSelectedCategory(cat === selectedCategory ? null : cat); }}
                 className={`px-3 py-1 rounded-full text-xs font-mono whitespace-nowrap transition-all ${
                   selectedCategory === cat
-                    ? 'bg-text text-bg font-bold btn-soft-primary'
-                    : 'bg-surface text-muted border border-border btn-soft'
+                    ? 'bg-text text-bg font-bold'
+                    : 'bg-surface text-muted border border-border'
                 }`}
               >
                 {cat.toLowerCase()}
@@ -168,9 +168,7 @@ export default function HomePage() {
               no gigs found
             </p>
             <p className="text-muted text-xs font-body max-w-[260px]">
-              {user?.role === 'business' 
-                ? `no open gigs in ${user?.city} yet. check back soon!`
-                : 'tap + in gigs tab to post your first gig'}
+              no open gigs in {user?.city} yet. {user?.role === 'creator' && 'tap + in gigs tab to post your first gig'}
             </p>
           </div>
         ) : (
@@ -185,12 +183,12 @@ export default function HomePage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ ...spring.default, delay: i * 0.02 }}
-                  className="p-4 rounded-card bg-surface border border-border hover:border-text/40 transition-all cursor-pointer card-soft"
+                  className="p-4 rounded-card bg-surface border border-border hover:border-text/40 transition-all cursor-pointer"
                   onClick={() => { haptic.tap(); router.push(`/messages?user=${gig.creator._id}`); }}
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-3 flex-1">
-                      <div className="w-10 h-10 rounded-full bg-elevated border border-border flex items-center justify-center font-heading font-bold text-text btn-soft">
+                      <div className="w-10 h-10 rounded-full bg-elevated border border-border flex items-center justify-center font-heading font-bold text-text">
                         {creatorName[0]?.toUpperCase() ?? '?'}
                       </div>
                       <div className="flex-1">
@@ -207,7 +205,7 @@ export default function HomePage() {
                         </div>
                       </div>
                     </div>
-                    <span className="text-sm font-mono font-bold text-text bg-elevated px-3 py-1.5 rounded-full border border-border btn-soft">
+                    <span className="text-sm font-mono font-bold text-text bg-elevated px-3 py-1.5 rounded-full border border-border">
                       ₹{gig.charge}
                     </span>
                   </div>
@@ -228,7 +226,20 @@ export default function HomePage() {
                       </span>
                       <span>{gig.creator?.ordersCount ?? 0} orders</span>
                     </div>
-                    <span className="text-text">chat & deal →</span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          haptic.tap();
+                          router.push(`/profile/${gig.creator._id}`);
+                        }}
+                        className="text-muted hover:text-text transition-colors"
+                      >
+                        visit profile
+                      </button>
+                      <span className="text-dim">•</span>
+                      <span className="text-text">chat & deal →</span>
+                    </div>
                   </div>
                 </motion.div>
               );

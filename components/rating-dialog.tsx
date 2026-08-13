@@ -6,13 +6,14 @@ import { motion } from 'framer-motion';
 import { pressScale, haptic } from '@/lib/haptics';
 
 interface RatingDialogProps {
-  gigId: string;
-  gigTitle: string;
+  gigId: string | null;
+  gigTitle?: string;
   revieweeId: string;
   revieweeName: string;
+  reviewerId: string;
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (rating: number, text?: string) => Promise<void>;
+  onSubmit?: (rating: number, text?: string) => Promise<void>;
 }
 
 const springConfig = { stiffness: 400, damping: 30 };
@@ -23,6 +24,7 @@ export default function RatingDialog({
   gigTitle,
   revieweeId,
   revieweeName,
+  reviewerId,
   isOpen,
   onClose,
   onSubmit,
@@ -38,7 +40,22 @@ export default function RatingDialog({
     setSubmitting(true);
     haptic.tap();
     try {
-      await onSubmit(rating, reviewText.trim() || undefined);
+      if (onSubmit) {
+        await onSubmit(rating, reviewText.trim() || undefined);
+      } else {
+        // Default: submit review via Convex API
+        const { convex } = await import('@/lib/convex');
+        const { api } = await import('@/convex/_generated/api');
+        const { Id } = await import('@/convex/_generated/dataModel');
+        
+        await convex.mutation(api.reviews.create, {
+          gigId: gigId ? (gigId as any) : undefined,
+          revieweeId: revieweeId as any,
+          reviewerId: reviewerId as any,
+          rating,
+          text: reviewText.trim() || undefined,
+        });
+      }
       haptic.success();
       onClose();
       setRating(0);
@@ -61,13 +78,13 @@ export default function RatingDialog({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 sm:p-6 backdrop-blur-sm">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 sm:p-6">
       <motion.div
         initial={{ scale: 0.9, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.9, opacity: 0, y: 20 }}
         transition={{ type: 'spring', ...springConfig }}
-        className="bg-bg border border-border rounded-[20px] w-full max-w-md overflow-hidden card-elevated"
+        className="bg-bg border border-border rounded-[20px] w-full max-w-md overflow-hidden"
       >
         {/* Header */}
         <div className="px-5 sm:px-6 pt-5 sm:pt-6 pb-4 border-b border-border flex items-center justify-between">
@@ -89,11 +106,19 @@ export default function RatingDialog({
 
         {/* Content */}
         <div className="px-5 sm:px-6 py-5 sm:py-6 space-y-6">
-          {/* Gig info */}
-          <div>
-            <p className="text-sm text-text font-mono mb-1">"{gigTitle}"</p>
-            <p className="text-xs text-dim">share your feedback</p>
-          </div>
+          {/* Gig info (if provided) */}
+          {gigTitle && (
+            <div>
+              <p className="text-sm text-text font-mono mb-1">"{gigTitle}"</p>
+              <p className="text-xs text-dim">share your feedback</p>
+            </div>
+          )}
+
+          {!gigTitle && (
+            <div>
+              <p className="text-xs text-dim">rate your experience with this user</p>
+            </div>
+          )}
 
           {/* Star rating - Responsive */}
           <div className="flex flex-col items-center gap-4">
@@ -142,7 +167,7 @@ export default function RatingDialog({
           {/* Review text - Responsive */}
           <div>
             <textarea
-              className="w-full p-3 sm:p-4 bg-surface border border-border rounded-[14px] text-sm text-text placeholder:text-muted resize-none focus:border-text focus:outline-none transition-colors input-soft"
+              className="w-full p-3 sm:p-4 bg-surface border border-border rounded-[14px] text-sm text-text placeholder:text-muted resize-none focus:border-text focus:outline-none transition-colors"
               placeholder="share your experience (optional)..."
               rows={3}
               value={reviewText}
@@ -160,7 +185,7 @@ export default function RatingDialog({
         <div className="px-5 sm:px-6 pb-5 sm:pb-6 border-t border-border pt-4 flex gap-3 sm:gap-4">
           <button
             onClick={handleClose}
-            className="flex-1 py-3 px-3 sm:px-4 rounded-full border border-border text-muted hover:bg-surface font-heading font-bold text-sm transition-colors btn-soft"
+            className="flex-1 py-3 px-3 sm:px-4 rounded-full border border-border text-muted hover:bg-surface font-heading font-bold text-sm transition-colors"
           >
             skip
           </button>

@@ -3,13 +3,13 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { LogOut, Pencil, Star, Briefcase } from 'lucide-react';
-import TabBar from '@/components/tab-bar';
-import ProUpgradeCard from '@/components/pro-upgrade-card';
-import { getCurrentUser, signOut, type User } from '@/lib/auth';
+import { Star, Briefcase, ArrowLeft, MessageCircle } from 'lucide-react';
+import { getCurrentUser, type User } from '@/lib/auth';
 import { convex } from '@/lib/convex';
 import { api } from '@/convex/_generated/api';
 import { haptic, pressScale } from '@/lib/haptics';
+import RatingDialog from '@/components/rating-dialog';
+import { Id } from '@/convex/_generated/dataModel';
 
 interface CreatorProfile {
   instagramHandle?: string;
@@ -26,35 +26,61 @@ interface BusinessProfile {
   address?: string;
 }
 
-export default function ProfilePage() {
+interface PublicUser extends User {
+  proExpiresAt?: number;
+}
+
+export default function PublicProfilePage({ params }: { params: { userId: string } }) {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [profileUser, setProfileUser] = useState<PublicUser | null>(null);
   const [creatorProfile, setCreatorProfile] = useState<CreatorProfile | null>(null);
   const [businessProfile, setBusinessProfile] = useState<BusinessProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showRatingDialog, setShowRatingDialog] = useState(false);
 
   useEffect(() => {
     const load = async () => {
-      const u = await getCurrentUser();
-      if (!u) { router.replace('/'); return; }
-      setUser(u);
+      const cu = await getCurrentUser();
+      if (!cu) { router.replace('/'); return; }
+      setCurrentUser(cu);
 
-      if (u.role === 'creator') {
-        const cp = await convex.query(api.users.getCreatorProfile, { userId: u._id });
-        setCreatorProfile(cp as CreatorProfile | null);
-      } else if (u.role === 'business') {
-        const bp = await convex.query(api.users.getBusinessProfile, { userId: u._id });
-        setBusinessProfile(bp as BusinessProfile | null);
+      try {
+        // Get the public user profile
+        const pu = await convex.query(api.users.getById, { userId: params.userId as Id<'users'> });
+        if (!pu) {
+          router.replace('/home');
+          return;
+        }
+        setProfileUser(pu as PublicUser);
+
+        // Get their profile data
+        if (pu.role === 'creator') {
+          const cp = await convex.query(api.users.getCreatorProfile, { userId: params.userId as Id<'users'> });
+          setCreatorProfile(cp as CreatorProfile | null);
+        } else if (pu.role === 'business') {
+          const bp = await convex.query(api.users.getBusinessProfile, { userId: params.userId as Id<'users'> });
+          setBusinessProfile(bp as BusinessProfile | null);
+        }
+      } catch (error) {
+        console.error('Failed to load profile:', error);
+        router.replace('/home');
+        return;
       }
+
       setLoading(false);
     };
     load();
-  }, [router]);
+  }, [router, params.userId]);
 
-  const handleSignOut = async () => {
+  const handleMessage = () => {
     haptic.tap();
-    await signOut();
-    router.replace('/');
+    router.push(`/messages?user=${params.userId}`);
+  };
+
+  const handleRate = () => {
+    haptic.tap();
+    setShowRatingDialog(true);
   };
 
   if (loading) {
@@ -65,58 +91,64 @@ export default function ProfilePage() {
     );
   }
 
+  if (!profileUser) {
+    return null;
+  }
+
+  const isProActive = profileUser.isPro && profileUser.proExpiresAt && profileUser.proExpiresAt > Date.now();
+
   return (
     <div className="app-container bg-bg pb-24 min-h-screen">
-      <header className="px-6 pt-14 pb-6 flex items-center justify-between">
-        <h1 className="font-heading font-bold text-2xl text-text">profile.</h1>
-        <motion.button className="p-2 text-dim" onClick={handleSignOut} {...pressScale}>
-          <LogOut size={18} />
+      <header className="px-6 pt-14 pb-6 flex items-center gap-4">
+        <motion.button
+          className="p-2 text-muted hover:text-text transition-colors -ml-2"
+          onClick={() => { haptic.tap(); router.back(); }}
+          {...pressScale}
+        >
+          <ArrowLeft size={20} />
         </motion.button>
+        <h1 className="font-heading font-bold text-2xl text-text">profile.</h1>
       </header>
 
       <main className="px-6">
         {/* Avatar + name */}
         <div className="flex flex-col items-center mb-8">
           <div className="w-20 h-20 rounded-full bg-elevated border border-border flex items-center justify-center text-2xl font-heading font-bold mb-4">
-            {user?.username?.slice(0, 2).toUpperCase() || '?'}
+            {profileUser?.username?.slice(0, 2).toUpperCase() || '?'}
           </div>
           <h2 className="font-heading font-bold text-xl text-text">
-            @{user?.username}
+            @{profileUser?.username}
           </h2>
           <p className="text-muted text-sm font-body mt-1 capitalize">
-            {user?.role} · {user?.city}, {user?.state}
+            {profileUser?.role} · {profileUser?.city}, {profileUser?.state}
           </p>
-          {user?.isPro && (user as any)?.proExpiresAt && (user as any)?.proExpiresAt > Date.now() ? (
+          {isProActive && (
             <span className="mt-2 px-3 py-1 rounded-full bg-text text-bg text-xs font-mono font-bold">
               * pro
             </span>
-          ) : user?.isPro ? (
-            <span className="mt-2 px-3 py-1 rounded-full bg-gray-400 text-white text-xs font-mono font-bold">
-              pro expired
-            </span>
-          ) : null}
+          )}
         </div>
 
         {/* Stats row */}
         <div className="flex gap-3 mb-8">
           <div className="flex-1 p-3 rounded-card bg-surface border border-border text-center">
-            <p className="font-heading font-bold text-xl text-text">{user?.ordersCount ?? 0}</p>
+            <p className="font-heading font-bold text-xl text-text">{profileUser?.ordersCount ?? 0}</p>
             <p className="text-dim text-[10px] font-mono flex items-center justify-center gap-1 mt-0.5">
               <Briefcase size={10} /> orders
             </p>
           </div>
           <div className="flex-1 p-3 rounded-card bg-surface border border-border text-center">
             <p className="font-heading font-bold text-xl text-text">
-              {user?.rating && user.rating > 0 ? user.rating.toFixed(1) : '—'}
+              {profileUser?.rating && profileUser.rating > 0 ? profileUser.rating.toFixed(1) : '—'}
             </p>
             <p className="text-dim text-[10px] font-mono flex items-center justify-center gap-1 mt-0.5">
-              <Star size={10} /> {user?.rating && user.rating > 0 ? 'rating' : 'no rating yet'}
+              <Star size={10} /> {profileUser?.rating && profileUser.rating > 0 ? 'rating' : 'no rating yet'}
             </p>
           </div>
         </div>
 
         {/* Creator profile details */}
-        {user?.role === 'creator' && creatorProfile && (
+        {profileUser?.role === 'creator' && creatorProfile && (
           <div className="space-y-4 mb-8">
             {creatorProfile.instagramHandle && (
               <div>
@@ -168,7 +200,7 @@ export default function ProfilePage() {
         )}
 
         {/* Business profile details */}
-        {user?.role === 'business' && businessProfile && (
+        {profileUser?.role === 'business' && businessProfile && (
           <div className="space-y-4 mb-8">
             {businessProfile.name && (
               <div>
@@ -197,59 +229,38 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* Pro subscription upgrade card */}
-        <ProUpgradeCard
-          userId={user?._id as string}
-          userEmail={user?.email as string}
-          isPro={user?.isPro}
-          proExpiresAt={(user as any)?.proExpiresAt}
-          onUpgradeSuccess={() => {
-            // Refresh user data after successful upgrade
-            window.location.reload();
-          }}
-        />
-
-        {/* Edit profile button */}
-        <motion.button
-          className="pill-btn-outline w-full flex items-center justify-center gap-2 mb-4"
-          onClick={() => { haptic.tap(); router.push('/profile/edit'); }}
-          {...pressScale}
-        >
-          <Pencil size={16} />
-          edit profile
-        </motion.button>
-
-        {/* Setup profile prompt if not complete */}
-        {user?.role === 'creator' && !creatorProfile && (
+        {/* Action buttons */}
+        <div className="flex gap-3 mb-6">
           <motion.button
-            className="pill-btn-primary w-full mb-4"
-            onClick={() => { haptic.tap(); router.push('/profile/setup'); }}
+            className="flex-1 pill-btn-primary flex items-center justify-center gap-2"
+            onClick={handleMessage}
             {...pressScale}
           >
-            complete creator profile
+            <MessageCircle size={16} />
+            message
           </motion.button>
-        )}
-        {user?.role === 'business' && !businessProfile && (
           <motion.button
-            className="pill-btn-primary w-full mb-4"
-            onClick={() => { haptic.tap(); router.push('/profile/setup'); }}
+            className="flex-1 pill-btn-outline flex items-center justify-center gap-2"
+            onClick={handleRate}
             {...pressScale}
           >
-            complete business profile
+            <Star size={16} />
+            rate
           </motion.button>
-        )}
-
-        {/* Sign out */}
-        <motion.button
-          className="w-full py-3 text-red-500 text-sm font-mono border border-red-500/20 rounded-pill hover:bg-red-500/5 transition-colors"
-          onClick={handleSignOut}
-          {...pressScale}
-        >
-          sign out
-        </motion.button>
+        </div>
       </main>
 
-      <TabBar />
+      {/* Rating dialog */}
+      {showRatingDialog && currentUser && (
+        <RatingDialog
+          isOpen={showRatingDialog}
+          onClose={() => setShowRatingDialog(false)}
+          gigId={null}
+          revieweeId={params.userId as Id<'users'>}
+          reviewerId={currentUser._id}
+          revieweeName={profileUser.username || 'user'}
+        />
+      )}
     </div>
   );
 }

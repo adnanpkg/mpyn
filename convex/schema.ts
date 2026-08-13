@@ -105,7 +105,7 @@ export default defineSchema({
 
   // Reviews
   reviews: defineTable({
-    gigId: v.id('gigs'),
+    gigId: v.optional(v.id('gigs')),
     reviewerId: v.id('users'),
     revieweeId: v.id('users'),
     rating: v.number(),
@@ -140,6 +140,24 @@ export default defineSchema({
     read: v.optional(v.boolean()),
     createdAt: v.number(),
   }).index('by_user', ['userId']),
+
+  // Offers (business offers to creator, creator can accept/reject)
+  offers: defineTable({
+    gigId: v.optional(v.id('gigs')),
+    fromUserId: v.id('users'), // Business sending offer
+    toUserId: v.id('users'), // Creator receiving offer
+    amount: v.number(),
+    status: v.union(
+      v.literal('pending'),
+      v.literal('accepted'),
+      v.literal('rejected')
+    ),
+    createdAt: v.number(),
+    respondedAt: v.optional(v.number()),
+  })
+    .index('by_to_user', ['toUserId'])
+    .index('by_from_user', ['fromUserId'])
+    .index('by_status', ['status']),
 
   // Pro subscriptions (₹190/month)
   subscriptions: defineTable({

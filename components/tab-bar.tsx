@@ -19,7 +19,7 @@ export default function TabBar() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 border-t border-border sheet-soft"
+      className="fixed bottom-0 left-0 right-0 z-40 border-t border-border"
       style={{
         background: 'rgba(0,0,0,0.8)',
         backdropFilter: 'blur(20px)',

@@ -14,8 +14,11 @@ const initRazorpay = () => {
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('=== Pro Subscription API Called ===');
+    
     // Check for required environment variables
     if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+      console.error('Missing Razorpay credentials');
       return NextResponse.json(
         { error: 'Razorpay configuration not available' },
         { status: 500 }
@@ -25,6 +28,8 @@ export async function POST(request: NextRequest) {
     const razorpay = initRazorpay();
     const { userId, customerEmail } = await request.json();
 
+    console.log('Request data:', { userId, customerEmail });
+
     // Validate required fields
     if (!userId || !customerEmail) {
       return NextResponse.json(
@@ -33,78 +38,42 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create or get Razorpay customer
-    let customer;
-    try {
-      // For simplicity, create a new customer each time
-      // In production, you might want to store customer IDs in your database
-      customer = await razorpay.customers.create({
-        name: `User ${userId}`,
-        email: customerEmail,
-        contact: '', // Optional: add phone if available
-        notes: {
-          userId,
-        },
-      });
-    } catch (error) {
-      console.error('Customer creation failed:', error);
-      return NextResponse.json(
-        { error: 'Failed to create customer' },
-        { status: 500 }
-      );
-    }
-
-    // Create Razorpay plan (₹190/month)
-    let plan;
-    try {
-      plan = await razorpay.plans.create({
-        period: 'monthly',
-        interval: 1,
-        item: {
-          name: 'multiply. Pro Subscription',
-          amount: 19000, // ₹190 in paisa
-          currency: 'INR',
-          description: 'Monthly Pro subscription - zero platform fees, verified badge',
-        },
-        notes: {
-          planType: 'multiply_pro_monthly',
-        },
-      });
-    } catch (error) {
-      console.error('Plan creation failed:', error);
-      return NextResponse.json(
-        { error: 'Failed to create subscription plan' },
-        { status: 500 }
-      );
-    }
-
-    // Create subscription - using simpler approach for TypeScript compatibility
-    const subscriptionData: any = {
-      plan_id: plan.id,
-      customer_notify: 1,
-      quantity: 1,
-      total_count: 12,
+    // SIMPLIFIED: Use one-time payment instead of subscription
+    // Create a regular order for ₹190 (30 days of Pro)
+    console.log('Creating order for Pro upgrade...');
+    
+    const order = await razorpay.orders.create({
+      amount: 19000, // ₹190 in paisa
+      currency: 'INR',
+      receipt: `pro_${userId}_${Date.now()}`,
       notes: {
         userId,
-        subscriptionType: 'multiply_pro',
+        paymentType: 'pro_subscription',
+        email: customerEmail,
+        duration: '30_days',
       },
-    };
+    });
 
-    const subscription = await razorpay.subscriptions.create(subscriptionData);
+    console.log('Order created successfully:', order.id);
 
     return NextResponse.json({
-      subscriptionId: subscription.id,
-      customerId: customer.id,
-      planId: plan.id,
-      amount: 19000, // Amount in paisa
+      orderId: order.id,
+      amount: 19000,
       currency: 'INR',
       key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
     });
 
   } catch (error: any) {
-    console.error('Subscription creation failed:', error);
+    console.error('=== Pro Subscription API Error ===');
+    console.error('Error:', error);
+    console.error('Error details:', {
+      statusCode: error.statusCode,
+      errorCode: error.error?.code,
+      description: error.error?.description,
+      message: error.message,
+    });
     return NextResponse.json(
-      { error: 'Failed to create subscription', details: error.message },
+      { error: 'Failed to create order', details: error.message || error.error?.description },
       { status: 500 }
     );
   }

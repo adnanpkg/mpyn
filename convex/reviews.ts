@@ -74,6 +74,63 @@ export const submitReview = mutation({
   },
 });
 
+// Create a profile review (without gig requirement)
+export const create = mutation({
+  args: {
+    gigId: v.optional(v.id('gigs')),
+    reviewerId: v.id('users'),
+    revieweeId: v.id('users'),
+    rating: v.number(),
+    text: v.optional(v.string()),
+  },
+  handler: async (ctx, { gigId, reviewerId, revieweeId, rating, text }) => {
+    // Validate rating is between 1-5
+    if (rating < 1 || rating > 5) {
+      throw new Error('Rating must be between 1 and 5');
+    }
+
+    // Can't review yourself
+    if (reviewerId === revieweeId) {
+      throw new Error('Cannot review yourself');
+    }
+
+    // Create review (gigId is optional for profile reviews)
+    const reviewId = await ctx.db.insert('reviews', {
+      gigId: gigId as any,
+      reviewerId,
+      revieweeId,
+      rating,
+      text,
+      createdAt: Date.now(),
+    });
+
+    // Update reviewee's average rating
+    const allReviews = await ctx.db
+      .query('reviews')
+      .withIndex('by_reviewee', (q) => q.eq('revieweeId', revieweeId))
+      .collect();
+
+    const totalRating = allReviews.reduce((sum, r) => sum + r.rating, 0);
+    const avgRating = totalRating / allReviews.length;
+
+    await ctx.db.patch(revieweeId, {
+      rating: Math.round(avgRating * 10) / 10, // Round to 1 decimal
+    });
+
+    // Notify the reviewee
+    const reviewee = await ctx.db.get(revieweeId);
+    await ctx.db.insert('notifications', {
+      userId: revieweeId,
+      type: 'review_received',
+      content: `received ${rating}⭐ rating${gigId ? ' for a gig' : ' on your profile'}. ${text ? 'check your profile for feedback!' : ''}`,
+      read: false,
+      createdAt: Date.now(),
+    });
+
+    return { success: true, reviewId };
+  },
+});
+
 // Get reviews for a user
 export const getForUser = query({
   args: { userId: v.id('users') },
