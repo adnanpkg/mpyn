@@ -167,13 +167,13 @@ export default function SystemStatus({ className = '' }: StatusCheckProps) {
   const getStatusColor = (status: SystemCheck['status']) => {
     switch (status) {
       case 'checking':
-        return 'bg-surface border-border';
+        return 'bg-surface';
       case 'pass':
-        return 'bg-elevated border-border';
+        return 'bg-elevated';
       case 'fail':
-        return 'bg-surface border-border';
+        return 'bg-surface';
       case 'warning':
-        return 'bg-surface border-border';
+        return 'bg-surface';
     }
   };
 
@@ -183,7 +183,7 @@ export default function SystemStatus({ className = '' }: StatusCheckProps) {
   }
 
   return (
-    <div className={`border border-border rounded-[14px] p-4 bg-surface ${className}`}>
+    <div className={`rounded-[14px] p-4 bg-surface ${className}`}>
       <div className="flex items-center justify-between mb-3">
         <h3 className="font-heading font-bold text-sm">System Status</h3>
         <button
@@ -202,7 +202,7 @@ export default function SystemStatus({ className = '' }: StatusCheckProps) {
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ ...spring.default, delay: i * 0.1 }}
-            className={`p-3 rounded border ${getStatusColor(check.status)}`}
+            className={`p-3 rounded ${getStatusColor(check.status)}`}
           >
             <div className="flex items-center gap-2 mb-1">
               {getStatusIcon(check.status)}
@@ -223,7 +223,7 @@ export default function SystemStatus({ className = '' }: StatusCheckProps) {
         </div>
       )}
 
-      <div className="mt-4 p-2 bg-surface rounded-[14px] border border-border text-xs text-muted">
+      <div className="mt-4 p-2 bg-surface rounded-[14px] text-xs text-muted">
         ⧚ This panel only appears in development mode
       </div>
     </div>

@@ -21,21 +21,21 @@ export default function PaymentStatus({
         return {
           icon: <Clock size={14} className="text-muted" />,
           text: 'awaiting confirmation',
-          bgColor: 'bg-surface border-border',
+          bgColor: 'bg-surface',
           textColor: 'text-muted',
         };
       case 'agreed':
         return {
           icon: <AlertCircle size={14} className="text-text" />,
           text: 'awaiting payment',
-          bgColor: 'bg-elevated border-border',
+          bgColor: 'bg-elevated',
           textColor: 'text-text',
         };
       case 'payment_pending':
         return {
           icon: <Clock size={14} className="text-muted" />,
           text: 'payment processing',
-          bgColor: 'bg-surface border-border',
+          bgColor: 'bg-surface',
           textColor: 'text-muted',
         };
       case 'payment_done':
@@ -43,28 +43,28 @@ export default function PaymentStatus({
         return {
           icon: <CheckCircle size={14} className="text-text" />,
           text: 'payment completed',
-          bgColor: 'bg-elevated border-border',
+          bgColor: 'bg-elevated',
           textColor: 'text-text',
         };
       case 'completed':
         return {
           icon: <CheckCircle size={14} className="text-text" />,
           text: 'gig completed',
-          bgColor: 'bg-elevated border-border',
+          bgColor: 'bg-elevated',
           textColor: 'text-text',
         };
       case 'disputed':
         return {
           icon: <XCircle size={14} className="text-dim" />,
           text: 'disputed',
-          bgColor: 'bg-surface border-border',
+          bgColor: 'bg-surface',
           textColor: 'text-dim',
         };
       default:
         return {
           icon: <Clock size={14} className="text-muted" />,
           text: status,
-          bgColor: 'bg-surface border-border',
+          bgColor: 'bg-surface',
           textColor: 'text-muted',
         };
     }

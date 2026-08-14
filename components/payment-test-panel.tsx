@@ -75,7 +75,7 @@ export default function PaymentTestPanel({ userId, isPro = false, className = ''
   };
 
   return (
-    <div className={`bg-elevated border border-border rounded-[14px] p-4 ${className}`}>
+    <div className={`bg-elevated rounded-[14px] p-4 ${className}`}>
       <div className="flex items-center gap-2 mb-3">
         <Play size={16} className="text-text" />
         <span className="font-heading font-bold text-sm text-text">
@@ -114,7 +114,7 @@ export default function PaymentTestPanel({ userId, isPro = false, className = ''
       </div>
 
       {/* Test Cards Reference */}
-      <div className="bg-surface rounded-[14px] p-2 mb-3 border border-border">
+      <div className="bg-surface rounded-[14px] p-2 mb-3">
         <h4 className="text-xs font-mono text-muted mb-1">Test Cards</h4>
         <div className="text-xs space-y-1 text-text">
           <div>✓ Success: {TEST_CARDS.success.number}</div>
@@ -124,10 +124,10 @@ export default function PaymentTestPanel({ userId, isPro = false, className = ''
 
       {/* Test Results */}
       {testResults.length > 0 && (
-        <div className="bg-surface rounded-[14px] p-2 max-h-32 overflow-y-auto border border-border">
+        <div className="bg-surface rounded-[14px] p-2 max-h-32 overflow-y-auto">
           <h4 className="text-xs font-mono text-muted mb-1">Results</h4>
           {testResults.slice(0, 5).map((result, i) => (
-            <div key={i} className="text-xs flex items-center justify-between py-1 border-b border-border last:border-0 text-text">
+            <div key={i} className="text-xs flex items-center justify-between py-1 last:border-0 text-text">
               <span className="text-muted">{result.timestamp}</span>
               <div className="flex items-center gap-1">
                 <span>₹{result.amount}</span>

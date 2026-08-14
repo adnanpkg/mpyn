@@ -10,7 +10,7 @@ export default function TermsOfServicePage() {
 
   return (
     <div className="app-container bg-bg min-h-screen pb-12">
-      <header className="px-6 pt-14 pb-6 flex items-center gap-4 border-b border-border">
+      <header className="px-6 pt-14 pb-6 flex items-center gap-4">
         <motion.button
           className="p-2 text-muted hover:text-text transition-colors -ml-2"
           onClick={() => { haptic.tap(); router.back(); }}
@@ -240,7 +240,7 @@ export default function TermsOfServicePage() {
           <h2 className="font-heading font-bold text-lg mb-3">15. Contact Information</h2>
           <div className="text-muted space-y-2">
             <p>For questions about these Terms, contact us at:</p>
-            <div className="bg-surface border border-border rounded-card p-4 font-mono text-xs">
+            <div className="bg-surface rounded-card p-4 font-mono text-xs">
               <p>multiply. platform</p>
               <p className="mt-2">Email: legal@multiply.in</p>
               <p>Address: [Your registered business address in India]</p>
@@ -248,7 +248,7 @@ export default function TermsOfServicePage() {
           </div>
         </section>
 
-        <section className="pt-4 border-t border-border">
+        <section className="pt-4">
           <p className="text-xs text-dim font-mono">
             These Terms constitute the entire agreement between you and multiply. regarding use of the Platform.
           </p>

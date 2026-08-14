@@ -10,7 +10,7 @@ export default function PrivacyPolicyPage() {
 
   return (
     <div className="app-container bg-bg min-h-screen pb-12">
-      <header className="px-6 pt-14 pb-6 flex items-center gap-4 border-b border-border">
+      <header className="px-6 pt-14 pb-6 flex items-center gap-4">
         <motion.button
           className="p-2 text-muted hover:text-text transition-colors -ml-2"
           onClick={() => { haptic.tap(); router.back(); }}
@@ -135,7 +135,7 @@ export default function PrivacyPolicyPage() {
           <h2 className="font-heading font-bold text-lg mb-3">10. Contact Us</h2>
           <div className="text-muted space-y-2">
             <p>For questions about this Privacy Policy or to exercise your rights, contact us at:</p>
-            <div className="bg-surface border border-border rounded-card p-4 font-mono text-xs">
+            <div className="bg-surface rounded-card p-4 font-mono text-xs">
               <p>multiply. platform</p>
               <p className="mt-2">Email: privacy@multiply.in</p>
               <p>Address: [Your registered business address in India]</p>
@@ -143,7 +143,7 @@ export default function PrivacyPolicyPage() {
           </div>
         </section>
 
-        <section className="pt-4 border-t border-border">
+        <section className="pt-4">
           <p className="text-xs text-dim font-mono">
             This Privacy Policy is governed by the Information Technology Act, 2000 and the Information Technology 
             (Reasonable Security Practices and Procedures and Sensitive Personal Data or Information) Rules, 2011.

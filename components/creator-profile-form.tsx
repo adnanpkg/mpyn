@@ -101,10 +101,10 @@ export default function CreatorProfileForm({ initial, onSave, submitLabel = 'sav
             return (
               <motion.button
                 key={cat}
-                className={`px-4 py-2 rounded-pill text-sm font-body border transition-colors ${
+                className={`px-4 py-2 rounded-pill text-sm font-body transition-colors ${
                   selected
-                    ? 'bg-text text-bg border-text'
-                    : 'bg-surface text-text border-border'
+                    ? 'bg-text text-bg'
+                    : 'bg-surface text-text'
                 }`}
                 onClick={() => { haptic.tap(); toggleCategory(cat); }}
                 whileTap={{ scale: 0.96 }}

@@ -278,7 +278,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
           {mode === 'signin' && signinStep === 2 && (
             <StepWrapper key="signin-otp" custom={direction}>
               <div className="flex flex-col items-center px-6 pt-20 text-center">
-                <div className="w-16 h-16 rounded-full bg-elevated border border-border flex items-center justify-center mb-6">
+                <div className="w-16 h-16 rounded-full bg-elevated flex items-center justify-center mb-6">
                   <Mail size={26} className="text-text" />
                 </div>
                 <h1 className="font-heading font-bold text-3xl text-text mb-2">check your email.</h1>
@@ -423,10 +423,10 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
               </h1>
               <div className="px-6 space-y-4">
                 <motion.button
-                  className={`w-full p-6 rounded-card border transition-all flex items-center gap-4 ${
+                  className={`w-full p-6 rounded-card transition-all flex items-center gap-4 ${
                     role === 'creator'
-                      ? 'bg-text border-text text-bg'
-                      : 'bg-bg border-border text-text'
+                      ? 'bg-text text-bg'
+                      : 'bg-bg text-text'
                   }`}
                   onClick={() => {
                     haptic.tap();
@@ -445,10 +445,10 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                   </div>
                 </motion.button>
                 <motion.button
-                  className={`w-full p-6 rounded-card border transition-all flex items-center gap-4 ${
+                  className={`w-full p-6 rounded-card transition-all flex items-center gap-4 ${
                     role === 'business'
-                      ? 'bg-text border-text text-bg'
-                      : 'bg-bg border-border text-text'
+                      ? 'bg-text text-bg'
+                      : 'bg-bg text-text'
                   }`}
                   onClick={() => {
                     haptic.tap();
@@ -500,7 +500,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
           {mode === 'signup' && signupStep === 6 && (
             <StepWrapper key="s6" custom={direction}>
               <div className="flex flex-col items-center px-6 pt-20 text-center">
-                <div className="w-16 h-16 rounded-full bg-elevated border border-border flex items-center justify-center mb-6">
+                <div className="w-16 h-16 rounded-full bg-elevated flex items-center justify-center mb-6">
                   <Mail size={26} className="text-text" />
                 </div>
                 <h1 className="font-heading font-bold text-3xl text-text mb-2">check your email.</h1>

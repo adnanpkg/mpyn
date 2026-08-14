@@ -112,7 +112,7 @@ export default function PaymentHistory({
     <div className="space-y-4">
       {/* Stats Overview */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-surface rounded-card p-3 border border-border">
+        <div className="bg-surface rounded-card p-3">
           <div className="flex items-center gap-2 mb-1">
             <TrendingUp size={14} className="text-text" />
             <span className="text-xs font-mono text-muted">earned</span>
@@ -120,7 +120,7 @@ export default function PaymentHistory({
           <p className="font-heading font-bold text-text">₹{stats.totalEarned.toLocaleString()}</p>
         </div>
         
-        <div className="bg-surface rounded-card p-3 border border-border">
+        <div className="bg-surface rounded-card p-3">
           <div className="flex items-center gap-2 mb-1">
             <TrendingDown size={14} className="text-dim" />
             <span className="text-xs font-mono text-muted">spent</span>
@@ -128,7 +128,7 @@ export default function PaymentHistory({
           <p className="font-heading font-bold text-text">₹{stats.totalSpent.toLocaleString()}</p>
         </div>
         
-        <div className="bg-surface rounded-card p-3 border border-border">
+        <div className="bg-surface rounded-card p-3">
           <div className="flex items-center gap-2 mb-1">
             <CreditCard size={14} className="text-muted" />
             <span className="text-xs font-mono text-muted">platform fees</span>
@@ -136,7 +136,7 @@ export default function PaymentHistory({
           <p className="font-heading font-bold text-text">₹{stats.totalFees.toLocaleString()}</p>
         </div>
         
-        <div className="bg-surface rounded-card p-3 border border-border">
+        <div className="bg-surface rounded-card p-3">
           <div className="flex items-center gap-2 mb-1">
             <Clock size={14} className="text-muted" />
             <span className="text-xs font-mono text-muted">completed</span>
@@ -161,7 +161,7 @@ export default function PaymentHistory({
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ ...spring.default, delay: i * 0.02 }}
-              className="bg-surface rounded-lg p-3 border border-border"
+              className="bg-surface rounded-lg p-3"
             >
               <div className="flex items-start justify-between mb-2">
                 <div className="flex-1">

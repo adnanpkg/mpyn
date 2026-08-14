@@ -10,7 +10,7 @@ export default function RefundPolicyPage() {
 
   return (
     <div className="app-container bg-bg min-h-screen pb-12">
-      <header className="px-6 pt-14 pb-6 flex items-center gap-4 border-b border-border">
+      <header className="px-6 pt-14 pb-6 flex items-center gap-4">
         <motion.button
           className="p-2 text-muted hover:text-text transition-colors -ml-2"
           onClick={() => { haptic.tap(); router.back(); }}
@@ -220,7 +220,7 @@ export default function RefundPolicyPage() {
           <h2 className="font-heading font-bold text-lg mb-3">13. Contact for Refunds</h2>
           <div className="text-muted space-y-2">
             <p>For refund requests or questions, contact us at:</p>
-            <div className="bg-surface border border-border rounded-card p-4 font-mono text-xs">
+            <div className="bg-surface rounded-card p-4 font-mono text-xs">
               <p>multiply. refunds team</p>
               <p className="mt-2">Email: refunds@multiply.in</p>
               <p>Support: support@multiply.in</p>
@@ -230,7 +230,7 @@ export default function RefundPolicyPage() {
           </div>
         </section>
 
-        <section className="pt-4 border-t border-border">
+        <section className="pt-4">
           <p className="text-xs text-dim font-mono">
             This Refund Policy is governed by Indian consumer protection laws and the Information Technology Act, 2000. 
             By using multiply., you acknowledge and accept this policy.

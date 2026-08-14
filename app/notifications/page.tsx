@@ -100,10 +100,10 @@ export default function NotificationsPage() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ ...spring.default, delay: i * 0.02 }}
-                className={`p-4 rounded-card border flex items-start gap-3 transition-colors cursor-pointer hover:border-text/40 ${
+                className={`p-4 rounded-card flex items-start gap-3 transition-colors cursor-pointer ${
                   notif.read
-                    ? 'bg-surface border-border'
-                    : 'bg-elevated border-border'
+                    ? 'bg-surface'
+                    : 'bg-elevated'
                 }`}
                 onClick={() => {
                   haptic.tap();
@@ -113,8 +113,8 @@ export default function NotificationsPage() {
                   }
                 }}
               >
-                <div className={`p-2 rounded-full border flex-shrink-0 mt-0.5 ${
-                  notif.read ? 'bg-surface border-border text-muted' : 'bg-elevated border-border text-text'
+                <div className={`p-2 rounded-full flex-shrink-0 mt-0.5 ${
+                  notif.read ? 'bg-surface text-muted' : 'bg-elevated text-text'
                 }`}>
                   {iconForType(notif.type)}
                 </div>

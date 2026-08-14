@@ -84,7 +84,7 @@ export default function ProUpgradeCard({
     
     return (
       <motion.div 
-        className="border border-border rounded-[20px] p-4 mb-6 bg-surface"
+        className="rounded-[20px] p-4 mb-6 bg-surface"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: 'spring', ...springConfig }}
@@ -114,7 +114,7 @@ export default function ProUpgradeCard({
 
   return (
     <motion.div 
-      className="border border-border rounded-[20px] p-5 mb-6 bg-elevated"
+      className="rounded-[20px] p-5 mb-6 bg-elevated"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: 'spring', ...springConfig }}
@@ -147,7 +147,7 @@ export default function ProUpgradeCard({
       </div>
 
       {/* Savings breakdown */}
-      <div className="bg-surface border border-border rounded-[14px] p-3 mb-5">
+      <div className="bg-surface rounded-[14px] p-3 mb-5">
         <p className="font-heading font-bold text-xs text-text mb-3">
           your savings
         </p>
@@ -164,7 +164,7 @@ export default function ProUpgradeCard({
             <span className="text-dim">₹10,000 gig</span>
             <span className="text-text">save ₹500</span>
           </div>
-          <div className="border-t border-border pt-2 mt-2">
+          <div className="pt-2 mt-2">
             <p className="text-dim">pro pays for itself at ₹3,800/month in gigs</p>
           </div>
         </div>

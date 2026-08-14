@@ -15,7 +15,7 @@ export default function FeeCalculator({ amount, isPro = false, className = '' }:
   if (amount < 500) return null;
 
   return (
-    <div className={`bg-surface rounded-card border border-border p-3 ${className}`}>
+    <div className={`bg-surface rounded-card p-3 ${className}`}>
       <div className="flex items-center gap-2 mb-2">
         <Info size={14} className="text-muted" />
         <span className="text-xs font-mono text-muted">fee breakdown</span>
@@ -44,14 +44,14 @@ export default function FeeCalculator({ amount, isPro = false, className = '' }:
           </span>
         </div>
         
-        <div className="border-t border-border/50 pt-1 flex justify-between text-xs font-bold">
+        <div className="pt-1 flex justify-between text-xs font-bold">
           <span className="text-text">creator receives</span>
           <span className="font-mono text-text">₹{creatorReceives.toLocaleString()}</span>
         </div>
       </div>
       
       {!isPro && amount >= 3800 && (
-        <div className="mt-2 pt-2 border-t border-border/50">
+        <div className="mt-2 pt-2">
           <p className="text-xs text-muted">
             * Pro subscription (₹190/month) saves ₹{platformFee.toLocaleString()} on this gig
           </p>

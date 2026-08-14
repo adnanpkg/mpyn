@@ -113,8 +113,8 @@ export default function GigCompletion({
   // Show completion status for completed gigs
   if (isCompleted) {
     return (
-      <div className="border-t border-border pt-4 space-y-3">
-        <div className="bg-elevated border border-border rounded-card p-3">
+      <div className="pt-4 space-y-3">
+        <div className="bg-elevated rounded-card p-3">
           <div className="flex items-center gap-2 mb-2">
             <CheckCircle size={16} className="text-text" />
             <span className="font-heading font-bold text-sm text-text">
@@ -164,10 +164,10 @@ export default function GigCompletion({
   // Show completion controls for in-progress gigs
   if (canMarkComplete) {
     return (
-      <div className="border-t border-border pt-4 space-y-3">
+      <div className="pt-4 space-y-3">
         {/* Status indicator */}
         {gig.status === 'pending_completion' && (
-          <div className="bg-surface border border-border rounded-card p-3">
+          <div className="bg-surface rounded-card p-3">
             <div className="flex items-center gap-2 mb-1">
               <Clock size={14} className="text-text" />
               <span className="font-heading font-bold text-sm text-text">
@@ -206,7 +206,7 @@ export default function GigCompletion({
 
         {/* Already marked indicator */}
         {hasMarkedComplete && (
-          <div className="bg-elevated border border-border rounded-card p-3">
+          <div className="bg-elevated rounded-card p-3">
             <div className="flex items-center gap-2">
               <CheckCircle size={14} className="text-text" />
               <span className="text-sm text-text">

@@ -114,9 +114,9 @@ export default function GigConfirmation({
   };
 
   return (
-    <div className="border-t border-border pt-4 space-y-3">
+    <div className="pt-4 space-y-3">
       {/* Gig Summary */}
-      <div className="bg-surface rounded-card p-3 border border-border">
+      <div className="bg-surface rounded-card p-3">
         <h4 className="font-heading font-bold text-sm text-text mb-1">
           {gig.title}
         </h4>
@@ -136,7 +136,7 @@ export default function GigConfirmation({
             </span>
           </div>
           {gig.status === 'agreed' && (
-            <div className="pt-1 border-t border-border/50">
+            <div className="pt-1">
               <div className="flex justify-between text-xs font-bold">
                 <span className="text-text">total payment</span>
                 <span className="font-mono text-text">
@@ -168,7 +168,7 @@ export default function GigConfirmation({
           </h4>
           
           <motion.button
-            className="w-full p-4 rounded-card border border-border bg-surface text-left"
+            className="w-full p-4 rounded-card bg-surface text-left"
             onClick={() => handleModeSelect('advance')}
             disabled={loading}
             {...pressScale}
@@ -191,7 +191,7 @@ export default function GigConfirmation({
           </motion.button>
 
           <motion.button
-            className="w-full p-4 rounded-card border border-border bg-surface text-left"
+            className="w-full p-4 rounded-card bg-surface text-left"
             onClick={() => handleModeSelect('direct')}
             disabled={loading}
             {...pressScale}
@@ -217,7 +217,7 @@ export default function GigConfirmation({
       {/* Payment Button (after gig confirmation) */}
       {showPaymentButton && (
         <div className="space-y-3">
-          <div className="bg-surface border border-border rounded-card p-3 mb-3">
+          <div className="bg-surface rounded-card p-3 mb-3">
             <p className="text-xs text-text">
               ✓ gig confirmed! proceed to payment to activate.
             </p>
@@ -243,7 +243,7 @@ export default function GigConfirmation({
 
       {/* Payment Status (for completed payments) */}
       {showPaymentStatus && (
-        <div className="bg-surface border border-border rounded-card p-3">
+        <div className="bg-surface rounded-card p-3">
           <div className="flex items-center gap-2 mb-2">
             <Check size={16} className="text-text" />
             <span className="font-heading font-bold text-sm text-text">

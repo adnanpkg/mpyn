@@ -99,10 +99,10 @@ export default function RatingDialog({
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.9, opacity: 0, y: 20 }}
         transition={{ type: 'spring', ...springConfig }}
-        className="bg-bg border border-border rounded-[20px] w-full max-w-md overflow-hidden"
+        className="bg-bg rounded-[20px] w-full max-w-md overflow-hidden"
       >
         {/* Header */}
-        <div className="px-5 sm:px-6 pt-5 sm:pt-6 pb-4 border-b border-border flex items-center justify-between">
+        <div className="px-5 sm:px-6 pt-5 sm:pt-6 pb-4 flex items-center justify-between">
           <div>
             <h3 className="font-heading font-bold text-lg sm:text-xl text-text">
               rate experience
@@ -182,7 +182,7 @@ export default function RatingDialog({
           {/* Review text - Responsive */}
           <div>
             <textarea
-              className="w-full p-3 sm:p-4 bg-surface border border-border rounded-[14px] text-sm text-text placeholder:text-muted resize-none focus:border-text focus:outline-none transition-colors"
+              className="w-full p-3 sm:p-4 bg-surface rounded-[14px] text-sm text-text placeholder:text-muted resize-none focus:outline-none transition-colors"
               placeholder="share your experience (optional)..."
               rows={3}
               value={reviewText}
@@ -197,10 +197,10 @@ export default function RatingDialog({
         </div>
 
         {/* Actions - Responsive button layout */}
-        <div className="px-5 sm:px-6 pb-5 sm:pb-6 border-t border-border pt-4 flex gap-3 sm:gap-4">
+        <div className="px-5 sm:px-6 pb-5 sm:pb-6 pt-4 flex gap-3 sm:gap-4">
           <button
             onClick={handleClose}
-            className="flex-1 py-3 px-3 sm:px-4 rounded-full border border-border text-muted hover:bg-surface font-heading font-bold text-sm transition-colors"
+            className="flex-1 py-3 px-3 sm:px-4 rounded-full text-muted hover:bg-surface font-heading font-bold text-sm transition-colors"
           >
             skip
           </button>
