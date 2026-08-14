@@ -47,6 +47,8 @@ export default function RatingDialog({
         const { convex } = await import('@/lib/convex');
         const { api } = await import('@/convex/_generated/api');
         
+        console.log('Submitting review:', { gigId, revieweeId, reviewerId, rating });
+        
         await convex.mutation(api.reviews.create, {
           gigId: gigId as any,
           revieweeId: revieweeId as any,
@@ -54,8 +56,11 @@ export default function RatingDialog({
           rating,
           text: reviewText.trim() || undefined,
         });
+        
+        console.log('Review submitted successfully');
       }
       haptic.success();
+      alert('review submitted! ✨');
       onClose();
       setRating(0);
       setHoverRating(0);
@@ -63,7 +68,8 @@ export default function RatingDialog({
     } catch (error) {
       console.error('Failed to submit review:', error);
       haptic.error();
-      alert('failed to submit. please try again.');
+      const errorMsg = error instanceof Error ? error.message : 'unknown error';
+      alert(`failed to submit: ${errorMsg}`);
     } finally {
       setSubmitting(false);
     }

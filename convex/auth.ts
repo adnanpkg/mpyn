@@ -100,7 +100,7 @@ export const verifyOtp = mutation({
         createdAt: now,
         isPro: false,
         ordersCount: 0,
-        rating: 5.0,
+        rating: 0,
       });
       user = await ctx.db.get(userId);
     }

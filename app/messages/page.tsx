@@ -220,18 +220,30 @@ export default function MessagesPage() {
   };
 
   const handleAcceptOffer = async (offerId: string) => {
-    if (!currentUser) return;
+    if (!currentUser || !targetUserId) return;
     
-    haptic.tap();
+    haptic.success();
     try {
       await convex.mutation(api.offers.accept, {
         offerId: offerId as Id<'offers'>,
         userId: currentUser._id,
       });
 
-      haptic.success();
+      // Send acceptance message
+      await convex.mutation(api.messages.send, {
+        senderId: currentUser._id,
+        receiverId: targetUserId as Id<'users'>,
+        text: '✅ offer accepted! let\'s get started.',
+      });
+
       setPendingOffer(null);
-      alert('offer accepted! ✨');
+      
+      // Reload messages
+      const thread = await convex.query(api.messages.getThread, {
+        userId: currentUser._id,
+        partnerId: targetUserId as Id<'users'>,
+      });
+      setMessages(thread as Message[]);
     } catch (err) {
       console.error('Failed to accept offer:', err);
       haptic.error();
@@ -240,7 +252,7 @@ export default function MessagesPage() {
   };
 
   const handleRejectOffer = async (offerId: string) => {
-    if (!currentUser) return;
+    if (!currentUser || !targetUserId) return;
     
     haptic.tap();
     try {
@@ -249,8 +261,21 @@ export default function MessagesPage() {
         userId: currentUser._id,
       });
 
-      haptic.success();
+      // Send rejection message
+      await convex.mutation(api.messages.send, {
+        senderId: currentUser._id,
+        receiverId: targetUserId as Id<'users'>,
+        text: '❌ offer not accepted.',
+      });
+
       setPendingOffer(null);
+      
+      // Reload messages
+      const thread = await convex.query(api.messages.getThread, {
+        userId: currentUser._id,
+        partnerId: targetUserId as Id<'users'>,
+      });
+      setMessages(thread as Message[]);
     } catch (err) {
       console.error('Failed to reject offer:', err);
       haptic.error();
@@ -310,18 +335,50 @@ export default function MessagesPage() {
               <p className="text-xs text-muted mb-2">incoming offer</p>
               <p className="text-text font-heading font-bold text-lg mb-3">₹{pendingOffer.amount.toLocaleString()}</p>
               <div className="flex gap-2">
-                <button
+                <motion.button
                   onClick={() => handleAcceptOffer(pendingOffer._id)}
-                  className="flex-1 bg-text text-bg py-2 rounded-full font-heading font-bold text-sm"
+                  className="flex-1 bg-text text-bg py-2.5 rounded-full font-heading font-bold text-sm relative overflow-hidden"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                 >
-                  W
-                </button>
-                <button
+                  <motion.span
+                    initial={{ opacity: 1 }}
+                    whileHover={{ opacity: 0 }}
+                    className="absolute inset-0 flex items-center justify-center"
+                  >
+                    W
+                  </motion.span>
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    whileHover={{ opacity: 1 }}
+                    className="absolute inset-0 flex items-center justify-center text-xs"
+                  >
+                    W offer
+                  </motion.span>
+                </motion.button>
+                <motion.button
                   onClick={() => handleRejectOffer(pendingOffer._id)}
-                  className="flex-1 bg-surface border border-border text-muted py-2 rounded-full font-heading font-bold text-sm"
+                  className="flex-1 bg-surface border border-border text-muted py-2.5 rounded-full font-heading font-bold text-sm relative overflow-hidden"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                 >
-                  L
-                </button>
+                  <motion.span
+                    initial={{ opacity: 1 }}
+                    whileHover={{ opacity: 0 }}
+                    className="absolute inset-0 flex items-center justify-center"
+                  >
+                    L
+                  </motion.span>
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    whileHover={{ opacity: 1 }}
+                    className="absolute inset-0 flex items-center justify-center text-xs"
+                  >
+                    L offer
+                  </motion.span>
+                </motion.button>
               </div>
             </motion.div>
           )}
