@@ -49,13 +49,23 @@ export default function RatingDialog({
         
         console.log('Submitting review:', { gigId, revieweeId, reviewerId, rating });
         
-        await convex.mutation(api.reviews.create, {
-          gigId: gigId as any,
+        const reviewArgs: any = {
           revieweeId: revieweeId as any,
           reviewerId: reviewerId as any,
           rating,
-          text: reviewText.trim() || undefined,
-        });
+        };
+        
+        // Only include gigId if it's not null
+        if (gigId) {
+          reviewArgs.gigId = gigId as any;
+        }
+        
+        // Only include text if provided
+        if (reviewText.trim()) {
+          reviewArgs.text = reviewText.trim();
+        }
+        
+        await convex.mutation(api.reviews.create, reviewArgs);
         
         console.log('Review submitted successfully');
       }

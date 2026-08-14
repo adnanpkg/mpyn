@@ -95,14 +95,24 @@ export const create = mutation({
     }
 
     // Create review (gigId is optional for profile reviews)
-    const reviewId = await ctx.db.insert('reviews', {
-      gigId: gigId || undefined,
+    const reviewData: any = {
       reviewerId,
       revieweeId,
       rating,
-      text,
       createdAt: Date.now(),
-    });
+    };
+    
+    // Only add gigId if it exists
+    if (gigId) {
+      reviewData.gigId = gigId;
+    }
+    
+    // Add text if provided
+    if (text) {
+      reviewData.text = text;
+    }
+    
+    const reviewId = await ctx.db.insert('reviews', reviewData);
 
     // Update reviewee's average rating
     const allReviews = await ctx.db

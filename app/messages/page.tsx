@@ -337,47 +337,21 @@ export default function MessagesPage() {
               <div className="flex gap-2">
                 <motion.button
                   onClick={() => handleAcceptOffer(pendingOffer._id)}
-                  className="flex-1 bg-text text-bg py-2.5 rounded-full font-heading font-bold text-sm relative overflow-hidden"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  className="flex-1 bg-green-600 text-white py-2.5 rounded-full font-heading font-bold text-sm"
+                  whileHover={{ scale: 1.05, backgroundColor: '#16a34a' }}
+                  whileTap={{ scale: 0.95 }}
                   transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                 >
-                  <motion.span
-                    initial={{ opacity: 1 }}
-                    whileHover={{ opacity: 0 }}
-                    className="absolute inset-0 flex items-center justify-center"
-                  >
-                    W
-                  </motion.span>
-                  <motion.span
-                    initial={{ opacity: 0 }}
-                    whileHover={{ opacity: 1 }}
-                    className="absolute inset-0 flex items-center justify-center text-xs"
-                  >
-                    W offer
-                  </motion.span>
+                  W offer
                 </motion.button>
                 <motion.button
                   onClick={() => handleRejectOffer(pendingOffer._id)}
-                  className="flex-1 bg-surface border border-border text-muted py-2.5 rounded-full font-heading font-bold text-sm relative overflow-hidden"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  className="flex-1 bg-red-600 text-white py-2.5 rounded-full font-heading font-bold text-sm"
+                  whileHover={{ scale: 1.05, backgroundColor: '#dc2626' }}
+                  whileTap={{ scale: 0.95 }}
                   transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                 >
-                  <motion.span
-                    initial={{ opacity: 1 }}
-                    whileHover={{ opacity: 0 }}
-                    className="absolute inset-0 flex items-center justify-center"
-                  >
-                    L
-                  </motion.span>
-                  <motion.span
-                    initial={{ opacity: 0 }}
-                    whileHover={{ opacity: 1 }}
-                    className="absolute inset-0 flex items-center justify-center text-xs"
-                  >
-                    L offer
-                  </motion.span>
+                  L offer
                 </motion.button>
               </div>
             </motion.div>
