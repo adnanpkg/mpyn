@@ -8,11 +8,11 @@ export const getById = query({
     const user = await ctx.db.get(userId);
     if (!user) return null;
     
-    // Ensure rating defaults to 0
-    if (user.rating === undefined || user.rating === null) {
-      await ctx.db.patch(userId, { rating: 0 });
-      return { ...user, rating: 0 };
-    }
+    // Return rating as 0 if undefined/null (client-side default)
+    const userWithDefaults = {
+      ...user,
+      rating: user.rating ?? 0,
+    };
     
     // For businesses, include profile name
     if (user.role === 'business') {
@@ -21,11 +21,11 @@ export const getById = query({
         .withIndex('by_user', (q) => q.eq('userId', userId))
         .first();
       if (bp?.name) {
-        return { ...user, username: bp.name };
+        return { ...userWithDefaults, username: bp.name };
       }
     }
     
-    return user;
+    return userWithDefaults;
   },
 });
 
