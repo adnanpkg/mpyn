@@ -8,6 +8,12 @@ export const getById = query({
     const user = await ctx.db.get(userId);
     if (!user) return null;
     
+    // Ensure rating defaults to 0
+    if (user.rating === undefined || user.rating === null) {
+      await ctx.db.patch(userId, { rating: 0 });
+      return { ...user, rating: 0 };
+    }
+    
     // For businesses, include profile name
     if (user.role === 'business') {
       const bp = await ctx.db

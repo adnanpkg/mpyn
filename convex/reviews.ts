@@ -94,6 +94,17 @@ export const create = mutation({
       throw new Error('Cannot review yourself');
     }
 
+    // Check if user already rated this person (prevent duplicates)
+    const existingReview = await ctx.db
+      .query('reviews')
+      .withIndex('by_reviewee', (q) => q.eq('revieweeId', revieweeId))
+      .filter((q) => q.eq(q.field('reviewerId'), reviewerId))
+      .first();
+
+    if (existingReview) {
+      throw new Error('You already rated this person');
+    }
+
     // Create review (gigId is optional for profile reviews)
     const reviewData: any = {
       reviewerId,
@@ -114,14 +125,22 @@ export const create = mutation({
     
     const reviewId = await ctx.db.insert('reviews', reviewData);
 
-    // Update reviewee's average rating
+    // Update reviewee's average rating - MUST fetch after insert to include the new review
     const allReviews = await ctx.db
       .query('reviews')
       .withIndex('by_reviewee', (q) => q.eq('revieweeId', revieweeId))
       .collect();
 
+    // Calculate average from ALL reviews (including the one we just added)
     const totalRating = allReviews.reduce((sum, r) => sum + r.rating, 0);
     const avgRating = totalRating / allReviews.length;
+
+    console.log(`Rating calculation for ${revieweeId}:`, {
+      totalReviews: allReviews.length,
+      totalRating,
+      avgRating,
+      roundedRating: Math.round(avgRating * 10) / 10,
+    });
 
     await ctx.db.patch(revieweeId, {
       rating: Math.round(avgRating * 10) / 10, // Round to 1 decimal
