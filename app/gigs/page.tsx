@@ -84,14 +84,17 @@ export default function GigsPage() {
           <h1 className="font-heading font-bold text-3xl text-text">gigs.</h1>
           <p className="text-muted text-xs font-mono">order tracking & status</p>
         </div>
-        <a
-          href="tel:+919876543210"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface border border-border text-xs font-mono text-text"
-          onClick={() => haptic.tap()}
+        <motion.button
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface text-xs font-mono text-text hover:bg-elevated transition-colors"
+          onClick={() => {
+            haptic.tap();
+            window.open('https://ig.me/m/adnan.pkg', '_blank');
+          }}
+          {...pressScale}
         >
           <PhoneCall size={12} />
           support
-        </a>
+        </motion.button>
       </header>
 
       <main className="px-6">
@@ -169,13 +172,17 @@ export default function GigsPage() {
                   />
 
                   <div className="pt-1 flex justify-end">
-                    <a
-                      href="tel:+919876543210"
+                    <motion.button
+                      onClick={() => {
+                        haptic.tap();
+                        window.open('https://ig.me/m/adnan.pkg', '_blank');
+                      }}
                       className="text-[10px] font-mono text-dim hover:text-text flex items-center gap-1"
+                      {...pressScale}
                     >
                       <AlertCircle size={10} />
-                      issue? call support
-                    </a>
+                      issue? dm support
+                    </motion.button>
                   </div>
                 </div>
               );
