@@ -41,25 +41,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // For subscriptions, we don't need order_id verification, just payment_id
+    // For subscriptions, we use order_id from regular payment (not subscription product)
     if (paymentType === 'pro_subscription') {
-      if (!razorpay_subscription_id) {
-        console.error('Missing subscription ID');
+      if (!razorpay_order_id && !razorpay_subscription_id) {
+        console.error('Missing order ID and subscription ID');
         return NextResponse.json(
-          { error: 'Missing subscription ID for Pro subscription' },
+          { error: 'Missing order or subscription ID for Pro subscription' },
           { status: 400 }
         );
       }
 
-      console.log('Activating Pro subscription for user:', userId, 'type:', typeof userId);
+      const orderId = razorpay_subscription_id || razorpay_order_id;
+      console.log('Activating Pro subscription for user:', userId, 'orderId:', orderId, 'type:', typeof userId);
 
       // Handle Pro subscription activation
       try {
         const result = await convex.mutation(api.subscriptions.activateProSubscription, {
           userId: userId as any,
-          razorpayOrderId: razorpay_subscription_id,
+          razorpayOrderId: orderId,
           razorpayPaymentId: razorpay_payment_id,
-          razorpaySubId: razorpay_subscription_id,
+          razorpaySubId: orderId,
         });
         console.log('Pro subscription activated successfully:', result);
       } catch (mutationError: any) {
