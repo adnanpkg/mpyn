@@ -34,6 +34,7 @@ export interface RazorpayResponse {
   razorpay_order_id?: string;
   razorpay_signature?: string;
   razorpay_subscription_id?: string;
+  orderId?: string; // Added for Pro subscriptions - passed through from client
 }
 
 // Load Razorpay script dynamically
@@ -133,7 +134,7 @@ export const openGigCheckout = async (
 export const openProSubscriptionCheckout = async (
   userId: string,
   userEmail: string,
-  onSuccess: (response: RazorpayResponse) => void,
+  onSuccess: (response: RazorpayResponse & { orderId: string }) => void,
   onError: (error: any) => void
 ) => {
   try {
@@ -172,13 +173,20 @@ export const openProSubscriptionCheckout = async (
       order_id: orderData.orderId,
       name: 'multiply.',
       description: 'Pro Subscription - ₹190 for 30 days',
-      handler: onSuccess,
+      handler: (response: RazorpayResponse) => {
+        // Attach orderId to response since Razorpay doesn't return it
+        onSuccess({
+          ...response,
+          orderId: orderData.orderId,
+        });
+      },
       prefill: {
         email: userEmail,
       },
       notes: {
         userId,
         subscriptionType: 'multiply_pro',
+        orderId: orderData.orderId,
       },
       theme: {
         color: '#000000',
