@@ -9,6 +9,7 @@ export async function POST(request: NextRequest) {
   try {
     // Check for required environment variables
     if (!process.env.RAZORPAY_KEY_SECRET) {
+      console.error('Missing RAZORPAY_KEY_SECRET');
       return NextResponse.json(
         { error: 'Razorpay configuration not available' },
         { status: 500 }
@@ -24,8 +25,16 @@ export async function POST(request: NextRequest) {
       paymentType,
     } = await request.json();
 
+    console.log('Payment verification request:', {
+      paymentType,
+      userId,
+      hasPaymentId: !!razorpay_payment_id,
+      hasSubId: !!razorpay_subscription_id,
+    });
+
     // Validate required fields
     if (!razorpay_payment_id || !userId || !paymentType) {
+      console.error('Missing required fields:', { razorpay_payment_id, userId, paymentType });
       return NextResponse.json(
         { error: 'Missing required payment verification fields' },
         { status: 400 }
@@ -35,22 +44,28 @@ export async function POST(request: NextRequest) {
     // For subscriptions, we don't need order_id verification, just payment_id
     if (paymentType === 'pro_subscription') {
       if (!razorpay_subscription_id) {
+        console.error('Missing subscription ID');
         return NextResponse.json(
           { error: 'Missing subscription ID for Pro subscription' },
           { status: 400 }
         );
       }
 
+      console.log('Activating Pro subscription for user:', userId);
+
       // Handle Pro subscription activation
       await convex.mutation(api.subscriptions.activateProSubscription, {
         userId: userId as any,
-        razorpayOrderId: razorpay_subscription_id, // Use subscription ID as order ID
+        razorpayOrderId: razorpay_subscription_id,
         razorpayPaymentId: razorpay_payment_id,
         razorpaySubId: razorpay_subscription_id,
       });
+
+      console.log('Pro subscription activated successfully');
     } else {
       // Handle gig payments - need order_id and signature verification
       if (!razorpay_order_id || !razorpay_signature || !gigId) {
+        console.error('Missing gig payment fields');
         return NextResponse.json(
           { error: 'Missing required fields for gig payment verification' },
           { status: 400 }
@@ -65,6 +80,7 @@ export async function POST(request: NextRequest) {
         .digest('hex');
 
       if (expectedSignature !== razorpay_signature) {
+        console.error('Invalid payment signature');
         return NextResponse.json(
           { error: 'Invalid payment signature' },
           { status: 400 }

@@ -49,8 +49,11 @@ export default function ProUpgradeCard({
               }),
             });
 
+            const verifyData = await verifyResponse.json();
+
             if (!verifyResponse.ok) {
-              throw new Error('Subscription verification failed');
+              console.error('Verification response:', verifyData);
+              throw new Error(verifyData.error || 'Subscription verification failed');
             }
             
             haptic.success();
@@ -59,7 +62,7 @@ export default function ProUpgradeCard({
           } catch (error) {
             console.error('Subscription verification failed:', error);
             haptic.error();
-            alert('verification failed. please try again.');
+            alert(`verification failed: ${error instanceof Error ? error.message : 'unknown error'}`);
           } finally {
             setUpgrading(false);
           }
