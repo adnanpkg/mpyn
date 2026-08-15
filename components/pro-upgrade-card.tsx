@@ -37,11 +37,13 @@ export default function ProUpgradeCard({
         userEmail,
         async (response: RazorpayResponse) => {
           try {
+            console.log('Payment successful, response:', response);
             const verifyResponse = await fetch('/api/razorpay/verify-payment', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
                 razorpay_subscription_id: response.razorpay_subscription_id,
                 razorpay_signature: response.razorpay_signature,
                 userId,
