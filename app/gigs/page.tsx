@@ -119,7 +119,7 @@ export default function GigsPage() {
               return (
                 <div
                   key={gig._id}
-                  className="p-4 rounded-card bg-surface border border-border space-y-3"
+                  className="p-4 rounded-card bg-surface space-y-3"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -133,7 +133,7 @@ export default function GigsPage() {
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-2">
-                      <span className="text-text font-mono font-bold text-sm bg-elevated px-2.5 py-1 rounded-full border border-border">
+                      <span className="text-text font-mono font-bold text-sm bg-elevated px-2.5 py-1 rounded-full">
                         ₹{gig.charge}
                       </span>
                       {isCreator && gig.status === 'open' && (

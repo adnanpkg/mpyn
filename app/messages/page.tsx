@@ -311,7 +311,7 @@ export default function MessagesPage() {
 
     return (
       <div className="app-container bg-bg min-h-screen flex flex-col pb-24">
-        <header className="px-6 pt-14 pb-4 border-b border-border">
+        <header className="px-6 pt-14 pb-4">
           <button
             onClick={() => {
               haptic.tap();
@@ -330,7 +330,7 @@ export default function MessagesPage() {
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-elevated border border-text rounded-[14px] p-4 mb-4"
+              className="bg-elevated rounded-[14px] p-4 mb-4"
             >
               <p className="text-xs text-muted mb-2">incoming offer</p>
               <p className="text-text font-heading font-bold text-lg mb-3">₹{pendingOffer.amount.toLocaleString()}</p>
@@ -372,7 +372,7 @@ export default function MessagesPage() {
                       className={`max-w-xs px-3 py-2 rounded-[14px] text-xs ${
                         isMine
                           ? 'bg-text text-bg'
-                          : 'bg-surface text-text border border-border'
+                          : 'bg-surface text-text'
                       }`}
                     >
                       {msg.text}
@@ -386,7 +386,7 @@ export default function MessagesPage() {
         </main>
 
         {/* Offer input or Message input */}
-        <div className="px-6 py-3 border-t border-border bg-bg">
+        <div className="px-6 py-3 bg-bg">
           {showOfferInput ? (
             /* Business offer input */
             <div className="space-y-2">
@@ -394,7 +394,7 @@ export default function MessagesPage() {
                 <span className="text-text text-sm">₹</span>
                 <input
                   type="number"
-                  className="flex-1 bg-surface border border-border px-3 py-2 rounded-[14px] text-sm text-text outline-none"
+                  className="flex-1 bg-surface px-3 py-2 rounded-[14px] text-sm text-text outline-none"
                   placeholder="enter amount..."
                   value={offerAmount}
                   onChange={(e) => setOfferAmount(e.target.value)}
@@ -408,7 +408,7 @@ export default function MessagesPage() {
                     setShowOfferInput(false);
                     setOfferAmount('');
                   }}
-                  className="flex-1 py-2 border border-border rounded-full text-xs font-mono text-muted"
+                  className="flex-1 py-2 rounded-full text-xs font-mono text-muted hover:bg-surface transition-colors"
                 >
                   cancel
                 </button>
@@ -435,7 +435,7 @@ export default function MessagesPage() {
               {showPayButton && (
                 <button
                   onClick={() => setShowOfferInput(true)}
-                  className="px-4 py-2 bg-elevated border border-border text-text rounded-full text-xs font-bold hover:bg-surface"
+                  className="px-4 py-2 bg-elevated text-text rounded-full text-xs font-bold hover:bg-surface transition-colors"
                   title="Send offer"
                 >
                   offer
@@ -491,7 +491,7 @@ export default function MessagesPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ ...spring.default, delay: i * 0.02 }}
-                className="p-4 rounded-card bg-surface border border-border hover:border-text/40 transition-all cursor-pointer"
+                className="p-4 rounded-card bg-surface hover:bg-elevated transition-all cursor-pointer"
                 onClick={() => {
                   haptic.tap();
                   router.push(`/messages?user=${convo.partnerId}`);
@@ -499,7 +499,7 @@ export default function MessagesPage() {
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3 flex-1">
-                    <div className="w-10 h-10 rounded-full bg-elevated border border-border flex items-center justify-center font-heading font-bold text-text">
+                    <div className="w-10 h-10 rounded-full bg-elevated flex items-center justify-center font-heading font-bold text-text">
                       {convo.partnerUsername?.[0]?.toUpperCase() ?? '?'}
                     </div>
                     <div className="flex-1">
@@ -512,7 +512,7 @@ export default function MessagesPage() {
                     </div>
                   </div>
                 </div>
-                <div className="mt-3 pt-2.5 border-t border-border/50 flex items-center justify-between text-[11px] font-mono text-dim">
+                <div className="mt-3 pt-2.5 flex items-center justify-between text-[11px] font-mono text-dim">
                   <span className="text-muted">
                     {convo.lastMessage?.createdAt 
                       ? new Date(convo.lastMessage.createdAt).toLocaleDateString('en-IN', {
