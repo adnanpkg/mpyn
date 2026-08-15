@@ -51,17 +51,25 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      console.log('Activating Pro subscription for user:', userId);
+      console.log('Activating Pro subscription for user:', userId, 'type:', typeof userId);
 
       // Handle Pro subscription activation
-      await convex.mutation(api.subscriptions.activateProSubscription, {
-        userId: userId as any,
-        razorpayOrderId: razorpay_subscription_id,
-        razorpayPaymentId: razorpay_payment_id,
-        razorpaySubId: razorpay_subscription_id,
-      });
-
-      console.log('Pro subscription activated successfully');
+      try {
+        const result = await convex.mutation(api.subscriptions.activateProSubscription, {
+          userId: userId as any,
+          razorpayOrderId: razorpay_subscription_id,
+          razorpayPaymentId: razorpay_payment_id,
+          razorpaySubId: razorpay_subscription_id,
+        });
+        console.log('Pro subscription activated successfully:', result);
+      } catch (mutationError: any) {
+        console.error('Mutation failed with error:', {
+          message: mutationError.message,
+          stack: mutationError.stack,
+          data: mutationError.data,
+        });
+        throw mutationError;
+      }
     } else {
       // Handle gig payments - need order_id and signature verification
       if (!razorpay_order_id || !razorpay_signature || !gigId) {
