@@ -5,13 +5,24 @@ import { v } from 'convex/values';
 export const giveProSubscription = mutation({
   args: { username: v.string() },
   handler: async (ctx, { username }) => {
-    // Find user by username
+    console.log('Looking for user with username:', username);
+    
+    // Find user by username (case insensitive search)
     const user = await ctx.db
       .query('users')
-      .withIndex('by_username', (q) => q.eq('username', username))
+      .withIndex('by_username', (q) => q.eq('username', username.toLowerCase()))
       .first();
 
-    if (!user) throw new Error(`User "${username}" not found`);
+    if (!user) {
+      console.error('User not found:', username);
+      // List all users with usernames for debugging
+      const allUsers = await ctx.db.query('users').collect();
+      const usersWithNames = allUsers.filter(u => u.username).map(u => u.username);
+      console.log('Available usernames:', usersWithNames);
+      throw new Error(`User "${username}" not found. Available: ${usersWithNames.join(', ')}`);
+    }
+
+    console.log('Found user:', user._id, user.username);
 
     const now = Date.now();
     const monthInMs = 30 * 24 * 60 * 60 * 1000;
@@ -22,8 +33,10 @@ export const giveProSubscription = mutation({
       proExpiresAt: now + monthInMs,
     });
 
+    console.log('Updated user isPro status');
+
     // Create subscription record
-    await ctx.db.insert('subscriptions', {
+    const subRecord = await ctx.db.insert('subscriptions', {
       userId: user._id,
       razorpaySubId: `test_sub_${Date.now()}`,
       planId: 'multiply_pro_monthly',
@@ -34,6 +47,8 @@ export const giveProSubscription = mutation({
       createdAt: now,
       updatedAt: now,
     });
+
+    console.log('Created subscription record:', subRecord);
 
     return {
       success: true,
