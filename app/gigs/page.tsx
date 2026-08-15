@@ -109,7 +109,7 @@ export default function GigsPage() {
             </p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {gigs.map((gig) => {
               const isCreator = gig.creatorId === user?._id;
               const isBusiness = gig.businessId === user?._id;

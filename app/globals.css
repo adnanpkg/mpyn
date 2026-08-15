@@ -65,7 +65,7 @@ input, textarea, select {
   }
 
   .app-container {
-    @apply mx-auto max-w-app w-full min-h-screen relative;
+    @apply mx-auto w-full min-h-screen relative md:max-w-none;
   }
 
   .search-input {

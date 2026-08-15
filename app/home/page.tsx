@@ -156,9 +156,9 @@ export default function HomePage() {
 
       <main className="px-6 pt-2">
         {fetchingFeed ? (
-          <div className="space-y-4 pt-2">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="skeleton w-full h-32 rounded-card" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="skeleton w-full h-60 rounded-card" />
             ))}
           </div>
         ) : filteredGigs.length === 0 ? (
@@ -172,7 +172,7 @@ export default function HomePage() {
             </p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredGigs.map((gig, i) => {
               const creatorName = gig.creator?.username ?? 'creator';
               const bio = gig.creator?.profile?.bio ?? '';
