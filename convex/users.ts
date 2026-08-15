@@ -1,6 +1,61 @@
 import { query, mutation } from './_generated/server';
 import { v } from 'convex/values';
 
+// MIGRATION: Move all users to creator/businessProfile tables
+export const migrateUsers = mutation({
+  handler: async (ctx) => {
+    const allUsers = await ctx.db.query('users').collect();
+    let creatorCount = 0;
+    let businessCount = 0;
+
+    for (const user of allUsers) {
+      // Skip if user doesn't have a role (incomplete signup)
+      if (!user.role) continue;
+
+      // Check if profile already exists
+      const existingProfile = await ctx.db
+        .query(user.role === 'creator' ? 'creatorProfiles' : 'businessProfiles')
+        .withIndex('by_user', (q) => q.eq('userId', user._id))
+        .first();
+
+      if (existingProfile) continue; // Already migrated
+
+      // Create profile based on role
+      if (user.role === 'creator') {
+        await ctx.db.insert('creatorProfiles', {
+          userId: user._id,
+          instagramHandle: '',
+          bio: '',
+          contentCategories: [],
+          gigCharge: 0,
+          profileComplete: false,
+          updatedAt: Date.now(),
+        });
+        creatorCount++;
+      } else if (user.role === 'business') {
+        await ctx.db.insert('businessProfiles', {
+          userId: user._id,
+          name: user.username || '',
+          category: '',
+          description: '',
+          profileComplete: false,
+          updatedAt: Date.now(),
+        });
+        businessCount++;
+      }
+    }
+
+    return {
+      success: true,
+      migrated: {
+        creators: creatorCount,
+        businesses: businessCount,
+        total: creatorCount + businessCount,
+      },
+    };
+  },
+});
+
 // Get user by ID
 export const getById = query({
   args: { userId: v.id('users') },
