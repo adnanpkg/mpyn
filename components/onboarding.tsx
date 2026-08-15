@@ -179,6 +179,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
     setLoading(true);
     setError('');
     try {
+      // 1. Complete user profile
       await convex.mutation(api.users.completeProfile, {
         userId: verifiedUserId as any,
         username: username.trim().toLowerCase(),
@@ -186,6 +187,25 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
         state: selectedState,
         city: selectedCity,
       });
+
+      // 2. Create creator or business profile
+      if (role === 'creator') {
+        await convex.mutation(api.users.saveCreatorProfile, {
+          userId: verifiedUserId as any,
+          instagramHandle: '',
+          bio: '',
+          contentCategories: [],
+          gigCharge: 0,
+        });
+      } else if (role === 'business') {
+        await convex.mutation(api.users.saveBusinessProfile, {
+          userId: verifiedUserId as any,
+          name: '',
+          category: '',
+          description: '',
+        });
+      }
+
       haptic.success();
       onComplete();
     } catch (e: unknown) {
