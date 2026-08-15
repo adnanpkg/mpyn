@@ -69,7 +69,7 @@ export const storeOtp = mutation({
   },
 });
 
-// Verify OTP — creates user if new, returns session token
+// Verify OTP — creates user if new, returns session token + forces signup if incomplete
 export const verifyOtp = mutation({
   args: { email: v.string(), code: v.string() },
   handler: async (ctx, { email, code }) => {
@@ -115,7 +115,10 @@ export const verifyOtp = mutation({
       expiresAt: now + 30 * 24 * 60 * 60 * 1000, // 30 days
     });
 
-    return { token, userId: user._id, isNewUser: !user.username };
+    // isNewUser = user needs to complete signup (no username OR no role)
+    const isNewUser = !user.username || !user.role;
+
+    return { token, userId: user._id, isNewUser };
   },
 });
 
