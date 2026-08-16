@@ -39,9 +39,8 @@ export function getAllCountries(): CountryData[] {
           return {
             name: state.name,
             code: state.isoCode,
-            // Limit cities to first 50 to avoid huge lists
+            // Include all cities from the package
             cities: (cities || [])
-              .slice(0, 50)
               .map((c) => c.name)
               .filter((name) => name && name.length > 0),
           };

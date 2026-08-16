@@ -49,6 +49,11 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   const [verifiedUserId, setVerifiedUserId] = useState<string | null>(null);
   const [isNewUser, setIsNewUser] = useState(false);
   const [geoDetecting, setGeoDetecting] = useState(false);
+  const [detectedLocation, setDetectedLocation] = useState<{
+    country: string;
+    state: string;
+    city: string;
+  } | null>(null);
 
   const goSignupNext = useCallback(() => {
     setDirection(1);
@@ -107,45 +112,57 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
         return;
       }
 
-      // Try to match with our data (may need fuzzy matching)
-      const matchedCountry = worldCountries.find(
-        (c) => c.name.toLowerCase() === location.country.toLowerCase()
-      );
+      // Store detected location and show confirmation
+      setDetectedLocation(location);
+      haptic.success();
+      setGeoDetecting(false);
+      // Will show confirmation screen via step logic
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'location detection failed');
+      setGeoDetecting(false);
+    }
+  };
 
-      if (matchedCountry) {
-        setSelectedCountry(matchedCountry.name);
+  // ── Handle GPS Location Confirmation ────────────────────
+  const handleConfirmLocation = () => {
+    if (!detectedLocation) return;
 
-        // Try to match state
-        if (location.state) {
-          const matchedState = matchedCountry.states.find(
-            (s) => s.name.toLowerCase() === location.state.toLowerCase()
-          );
-          if (matchedState) {
-            setSelectedState(matchedState.name);
+    haptic.tap();
 
-            // Try to match city
-            if (location.city) {
-              const matchedCity = matchedState.cities.find(
-                (c) => c.toLowerCase() === location.city.toLowerCase()
-              );
-              if (matchedCity) {
-                setSelectedCity(matchedCity);
-              }
+    // Try to match with our data
+    const matchedCountry = worldCountries.find(
+      (c) => c.name.toLowerCase() === detectedLocation.country.toLowerCase()
+    );
+
+    if (matchedCountry) {
+      setSelectedCountry(matchedCountry.name);
+
+      // Try to match state
+      if (detectedLocation.state) {
+        const matchedState = matchedCountry.states.find(
+          (s) => s.name.toLowerCase() === detectedLocation.state.toLowerCase()
+        );
+        if (matchedState) {
+          setSelectedState(matchedState.name);
+
+          // Try to match city
+          if (detectedLocation.city) {
+            const matchedCity = matchedState.cities.find(
+              (c) => c.toLowerCase() === detectedLocation.city.toLowerCase()
+            );
+            if (matchedCity) {
+              setSelectedCity(matchedCity);
             }
           }
         }
-
-        haptic.success();
-        // Skip to role selection (step 4)
-        setDirection(1);
-        setSignupStep(4);
-      } else {
-        setError(`country not found: ${location.country}. please select manually.`);
       }
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'location detection failed');
-    } finally {
-      setGeoDetecting(false);
+
+      setDetectedLocation(null);
+      // Skip to role selection (step 4)
+      setDirection(1);
+      setSignupStep(4);
+    } else {
+      setError(`country not found: ${detectedLocation.country}. please select manually.`);
     }
   };
 
@@ -381,7 +398,66 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             </StepWrapper>
           )}
 
-          {/* ── SIGN IN step 1 — email ───────────────────────── */}
+          {/* ── SIGNUP step 0.5 — confirm GPS location ─────────── */}
+          {mode === 'signup' && detectedLocation && (
+            <StepWrapper key="s0-confirm" custom={direction}>
+              <div className="flex flex-col items-center justify-center min-h-screen px-6">
+                <div className="w-16 h-16 rounded-full bg-elevated flex items-center justify-center mb-6">
+                  <MapPin size={28} className="text-text" />
+                </div>
+                <h1 className="font-heading font-bold text-3xl text-text mb-2 text-center">
+                  is this you?
+                </h1>
+                
+                {/* Show detected location */}
+                <div className="bg-surface rounded-card p-4 w-full mb-6 space-y-2">
+                  <div>
+                    <p className="text-xs text-dim font-mono">country</p>
+                    <p className="text-text font-heading font-bold">{detectedLocation.country}</p>
+                  </div>
+                  {detectedLocation.state && (
+                    <div>
+                      <p className="text-xs text-dim font-mono">state/province</p>
+                      <p className="text-text font-heading font-bold">{detectedLocation.state}</p>
+                    </div>
+                  )}
+                  {detectedLocation.city && (
+                    <div>
+                      <p className="text-xs text-dim font-mono">city</p>
+                      <p className="text-text font-heading font-bold">{detectedLocation.city}</p>
+                    </div>
+                  )}
+                </div>
+
+                {error && <p style={{ color: '#FF3B30' }} className="text-xs font-mono mb-4 text-center">{error}</p>}
+
+                <motion.button
+                  className="pill-btn-primary w-full mb-3"
+                  onClick={handleConfirmLocation}
+                  {...pressScale}
+                >
+                  yes, that's right
+                </motion.button>
+
+                <motion.button
+                  className="w-full py-3 px-4 rounded-full font-body text-sm text-muted"
+                  onClick={() => {
+                    haptic.tap();
+                    setDetectedLocation(null);
+                    setError('');
+                    // Go back to manual selection
+                    setDirection(-1);
+                    setSignupStep(1);
+                  }}
+                  {...pressScale}
+                >
+                  no, let me select manually
+                </motion.button>
+              </div>
+            </StepWrapper>
+          )}
+
+          {/* ── SIGNUP step 1 — country ─────────────────────── */}
           {mode === 'signin' && signinStep === 1 && (
             <StepWrapper key="signin-email" custom={direction}>
               <div className="flex flex-col px-6 pt-20">
