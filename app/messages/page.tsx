@@ -324,7 +324,7 @@ export default function MessagesPage() {
           <h2 className="font-heading font-bold text-lg text-text">{partner?.username || 'user'}</h2>
         </header>
 
-        <main className="flex-1 px-6 py-4 overflow-y-auto space-y-2">
+        <main className="flex-1 px-6 py-4 overflow-y-auto space-y-2 pb-32">
           {/* Pending offer banner (creator sees this when business sent an offer) */}
           {pendingOffer && (
             <motion.div
@@ -386,7 +386,7 @@ export default function MessagesPage() {
         </main>
 
         {/* Offer input or Message input */}
-        <div className="fixed bottom-0 left-0 right-0 px-6 py-3 bg-bg border-t border-border z-10">
+        <div className="fixed bottom-14 left-0 right-0 px-6 py-3 bg-bg border-t border-border z-50">
           {showOfferInput ? (
             /* Business offer input */
             <div className="space-y-2">
