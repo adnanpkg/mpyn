@@ -2,8 +2,9 @@
 
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, ArrowLeft, Mail } from 'lucide-react';
+import { Search, ArrowLeft, Mail, MapPin, Loader } from 'lucide-react';
 import { worldCountries, type CountryData } from '@/lib/world-data';
+import { getGeoLocation, reverseGeocode } from '@/lib/geolocation';
 import { haptic, spring, pressScale } from '@/lib/haptics';
 import { sendOtp, verifyOtp } from '@/lib/auth';
 import { convex } from '@/lib/convex';
@@ -14,7 +15,7 @@ interface OnboardingProps {
 }
 
 type Mode = 'welcome' | 'signup' | 'signin';
-type SignupStep = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+type SignupStep = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 type SigninStep = 1 | 2 | 3;
 
 const slideVariants = {
@@ -25,7 +26,7 @@ const slideVariants = {
 
 export default function Onboarding({ onComplete }: OnboardingProps) {
   const [mode, setMode] = useState<Mode>('welcome');
-  const [signupStep, setSignupStep] = useState<SignupStep>(1);
+  const [signupStep, setSignupStep] = useState<SignupStep>(0);
   const [signinStep, setSigninStep] = useState<SigninStep>(1);
   const [direction, setDirection] = useState(1);
 
@@ -47,6 +48,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   // Stored userId after OTP verified (for profile completion)
   const [verifiedUserId, setVerifiedUserId] = useState<string | null>(null);
   const [isNewUser, setIsNewUser] = useState(false);
+  const [geoDetecting, setGeoDetecting] = useState(false);
 
   const goSignupNext = useCallback(() => {
     setDirection(1);
@@ -57,8 +59,8 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   const goSignupBack = useCallback(() => {
     setDirection(-1);
     setError('');
-    if (signupStep === 1) { setMode('welcome'); return; }
-    setSignupStep((s) => Math.max(s - 1, 1) as SignupStep);
+    if (signupStep === 0) { setMode('welcome'); return; }
+    setSignupStep((s) => Math.max(s - 1, 0) as SignupStep);
   }, [signupStep]);
 
   const goSigninBack = useCallback(() => {
@@ -81,6 +83,71 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   );
 
   const [otpSent, setOtpSent] = useState(false);
+
+  // ── Handle GPS Location Detection ──────────────────────
+  const handleDetectLocation = async () => {
+    haptic.tap();
+    setGeoDetecting(true);
+    setError('');
+
+    try {
+      // Get GPS coordinates
+      const coords = await getGeoLocation();
+      if (!coords) {
+        setError('could not get location. please allow GPS access.');
+        setGeoDetecting(false);
+        return;
+      }
+
+      // Reverse geocode to get country, state, city
+      const location = await reverseGeocode(coords.latitude, coords.longitude);
+      if (!location || !location.country) {
+        setError('could not find your location. please select manually.');
+        setGeoDetecting(false);
+        return;
+      }
+
+      // Try to match with our data (may need fuzzy matching)
+      const matchedCountry = worldCountries.find(
+        (c) => c.name.toLowerCase() === location.country.toLowerCase()
+      );
+
+      if (matchedCountry) {
+        setSelectedCountry(matchedCountry.name);
+
+        // Try to match state
+        if (location.state) {
+          const matchedState = matchedCountry.states.find(
+            (s) => s.name.toLowerCase() === location.state.toLowerCase()
+          );
+          if (matchedState) {
+            setSelectedState(matchedState.name);
+
+            // Try to match city
+            if (location.city) {
+              const matchedCity = matchedState.cities.find(
+                (c) => c.toLowerCase() === location.city.toLowerCase()
+              );
+              if (matchedCity) {
+                setSelectedCity(matchedCity);
+              }
+            }
+          }
+        }
+
+        haptic.success();
+        // Skip to role selection (step 4)
+        setDirection(1);
+        setSignupStep(4);
+      } else {
+        setError(`country not found: ${location.country}. please select manually.`);
+      }
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'location detection failed');
+    } finally {
+      setGeoDetecting(false);
+    }
+  };
 
   // ── Send OTP ──────────────────────────────────────────────
   const handleSendOtp = async (isSignup: boolean, isResend = false) => {
@@ -260,6 +327,55 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                 >
                   already have an account?{' '}
                   <span className="text-text underline">sign in</span>
+                </motion.button>
+              </div>
+            </StepWrapper>
+          )}
+
+          {/* ── SIGNUP step 0 — auto-detect location ──────────── */}
+          {mode === 'signup' && signupStep === 0 && (
+            <StepWrapper key="s0" custom={direction}>
+              <div className="flex flex-col items-center justify-center min-h-screen px-6">
+                <div className="w-16 h-16 rounded-full bg-elevated flex items-center justify-center mb-6">
+                  <MapPin size={28} className="text-text" />
+                </div>
+                <h1 className="font-heading font-bold text-3xl text-text mb-2 text-center">
+                  where are you?
+                </h1>
+                <p className="text-muted text-sm font-body mb-8 text-center max-w-xs">
+                  we can auto-detect your location with gps
+                </p>
+
+                {error && <p style={{ color: '#FF3B30' }} className="text-xs font-mono mb-4 text-center">{error}</p>}
+
+                <motion.button
+                  className="pill-btn-primary w-full mb-4 flex items-center justify-center gap-2 disabled:opacity-50"
+                  onClick={handleDetectLocation}
+                  disabled={geoDetecting}
+                  {...pressScale}
+                >
+                  {geoDetecting ? (
+                    <>
+                      <Loader size={14} className="animate-spin" />
+                      detecting...
+                    </>
+                  ) : (
+                    <>
+                      <MapPin size={16} />
+                      auto-detect
+                    </>
+                  )}
+                </motion.button>
+
+                <motion.button
+                  className="w-full py-3 px-4 rounded-full font-body text-sm text-muted"
+                  onClick={() => {
+                    haptic.tap();
+                    goSignupNext();
+                  }}
+                  {...pressScale}
+                >
+                  select manually
                 </motion.button>
               </div>
             </StepWrapper>
