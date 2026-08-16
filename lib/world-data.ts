@@ -14,12 +14,13 @@ export interface StateData {
   cities: string[];
 }
 
-// Cache for countries and their states/cities
+// Cache for countries - lazy loaded
 let cachedCountries: CountryData[] | null = null;
 
 /**
- * Get all countries with their states and cities.
- * Uses country-state-city npm package for complete global data.
+ * Get all countries with their states (LAZY LOADED).
+ * Cities are loaded on-demand when user selects a state.
+ * This dramatically improves initial load time from ~6s to instant.
  */
 export function getAllCountries(): CountryData[] {
   if (cachedCountries) return cachedCountries;
@@ -33,18 +34,12 @@ export function getAllCountries(): CountryData[] {
       return {
         name: country.name,
         code: country.isoCode,
-        states: (states || []).map((state) => {
-          const cities = City.getCitiesOfState(country.isoCode, state.isoCode);
-          
-          return {
-            name: state.name,
-            code: state.isoCode,
-            // Include all cities from the package
-            cities: (cities || [])
-              .map((c) => c.name)
-              .filter((name) => name && name.length > 0),
-          };
-        }),
+        // Load state structure but NOT cities yet
+        states: (states || []).map((state) => ({
+          name: state.name,
+          code: state.isoCode,
+          cities: [], // Empty - will be loaded on demand in getCities()
+        })),
       };
     })
     .filter((country) => country.states && country.states.length > 0)
@@ -64,13 +59,28 @@ export function getStates(countryName: string): StateData[] {
   return findCountry(countryName)?.states ?? [];
 }
 
-// Helper: get cities for a state within a country
+// Helper: get cities for a state within a country (loads on demand)
 export function getCities(countryName: string, stateName: string): string[] {
   const country = findCountry(countryName);
   if (!country) return [];
+  
   const state = country.states.find((s) => s.name === stateName);
-  return state?.cities ?? [];
+  if (!state) return [];
+  
+  // If cities not loaded yet, load them NOW (on demand)
+  if (state.cities.length === 0) {
+    const cities = City.getCitiesOfState(country.code, state.code || stateName);
+    state.cities = (cities || [])
+      .map((c) => c.name)
+      .filter((name) => name && name.length > 0);
+  }
+  
+  return state.cities;
 }
 
-// For backwards compatibility with onboarding component
-export const worldCountries: CountryData[] = getAllCountries();
+// For backwards compatibility
+export const worldCountries: CountryData[] = (() => {
+  // Try to return cached or initialize on first access
+  if (cachedCountries) return cachedCountries;
+  return getAllCountries();
+})();
