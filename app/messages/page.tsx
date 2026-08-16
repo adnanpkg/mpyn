@@ -310,7 +310,7 @@ export default function MessagesPage() {
     const showRequestButton = !isCurrentUserBusiness && partner?.role === 'business';
 
     return (
-      <div className="app-container bg-bg min-h-screen flex flex-col pb-24">
+      <div className="app-container bg-bg min-h-screen flex flex-col">
         <header className="px-6 pt-14 pb-4">
           <button
             onClick={() => {
@@ -386,7 +386,7 @@ export default function MessagesPage() {
         </main>
 
         {/* Offer input or Message input */}
-        <div className="px-6 py-3 bg-bg">
+        <div className="fixed bottom-0 left-0 right-0 px-6 py-3 bg-bg border-t border-border z-10">
           {showOfferInput ? (
             /* Business offer input */
             <div className="space-y-2">
