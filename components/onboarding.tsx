@@ -350,7 +350,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
           )}
 
           {/* ── SIGNUP step 0 — auto-detect location ──────────── */}
-          {mode === 'signup' && signupStep === 0 && (
+          {mode === 'signup' && signupStep === 0 && !detectedLocation && (
             <StepWrapper key="s0" custom={direction}>
               <div className="flex flex-col items-center justify-center min-h-screen px-6">
                 <div className="w-16 h-16 rounded-full bg-elevated flex items-center justify-center mb-6">
