@@ -121,7 +121,14 @@ export default function ProfilePage() {
             {creatorProfile.instagramHandle && (
               <div>
                 <p className="text-dim text-xs font-mono mb-1">instagram</p>
-                <p className="text-text text-sm font-body">@{creatorProfile.instagramHandle}</p>
+                <a 
+                  href={`https://instagram.com/${creatorProfile.instagramHandle}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-text text-sm font-body hover:text-elevated transition-colors cursor-pointer"
+                >
+                  @{creatorProfile.instagramHandle}
+                </a>
               </div>
             )}
             {creatorProfile.bio && (
