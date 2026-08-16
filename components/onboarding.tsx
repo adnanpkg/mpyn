@@ -401,11 +401,11 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
           {/* ── SIGNUP step 0.5 — confirm GPS location ─────────── */}
           {mode === 'signup' && detectedLocation && (
             <StepWrapper key="s0-confirm" custom={direction}>
-              <div className="flex flex-col items-center justify-center min-h-screen px-6">
-                <div className="w-16 h-16 rounded-full bg-elevated flex items-center justify-center mb-6">
+              <div className="flex flex-col items-center justify-center min-h-screen px-6 pt-24">
+                <div className="w-16 h-16 rounded-full bg-elevated flex items-center justify-center mb-12">
                   <MapPin size={28} className="text-text" />
                 </div>
-                <h1 className="font-heading font-bold text-3xl text-text mb-2 text-center">
+                <h1 className="font-heading font-bold text-3xl text-text text-center">
                   is this you?
                 </h1>
                 
