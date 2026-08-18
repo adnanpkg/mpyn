@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { LogOut, Pencil, Star, Briefcase } from 'lucide-react';
 import TabBar from '@/components/tab-bar';
+import ProfilePicture from '@/components/profile-picture';
 import ProUpgradeCard from '@/components/pro-upgrade-card';
 import { getCurrentUser, signOut, type User } from '@/lib/auth';
 import { convex } from '@/lib/convex';
@@ -17,6 +18,7 @@ interface CreatorProfile {
   contentCategories?: string[];
   gigCharge?: number;
   portfolioUrl?: string;
+  pfpSvg?: string;
 }
 
 interface BusinessProfile {
@@ -24,6 +26,7 @@ interface BusinessProfile {
   category?: string;
   description?: string;
   address?: string;
+  pfpSvg?: string;
 }
 
 export default function ProfilePage() {
@@ -77,9 +80,12 @@ export default function ProfilePage() {
       <main className="px-6">
         {/* Avatar + name */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-20 h-20 rounded-full bg-elevated flex items-center justify-center text-2xl font-heading font-bold mb-4">
-            {user?.username?.slice(0, 2).toUpperCase() || '?'}
-          </div>
+          <ProfilePicture
+            pfpSvg={user?.role === 'creator' ? creatorProfile?.pfpSvg : businessProfile?.pfpSvg}
+            initials={user?.username?.slice(0, 2).toUpperCase() || '?'}
+            size="lg"
+            className="mb-4"
+          />
           <h2 className="font-heading font-bold text-xl text-text">
             @{user?.username}
           </h2>

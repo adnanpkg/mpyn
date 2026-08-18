@@ -43,6 +43,7 @@ export default defineSchema({
     contentCategories: v.optional(v.array(v.string())),
     gigCharge: v.optional(v.number()),
     portfolioUrl: v.optional(v.string()),
+    pfpSvg: v.optional(v.string()), // Profile picture SVG filename
     profileComplete: v.optional(v.boolean()),
     updatedAt: v.number(),
   }).index('by_user', ['userId']),
@@ -55,6 +56,7 @@ export default defineSchema({
     description: v.optional(v.string()),
     address: v.optional(v.string()),
     photos: v.optional(v.array(v.string())),
+    pfpSvg: v.optional(v.string()), // Profile picture SVG filename
     profileComplete: v.optional(v.boolean()),
     updatedAt: v.number(),
   }).index('by_user', ['userId']),

@@ -6,6 +6,7 @@ import { haptic, pressScale } from '@/lib/haptics';
 import { getCurrentUser } from '@/lib/auth';
 import { convex } from '@/lib/convex';
 import { api } from '@/convex/_generated/api';
+import PFPSelector from '@/components/pfp-selector';
 
 const BUSINESS_CATEGORIES = [
   'Restaurant',
@@ -28,6 +29,7 @@ export interface BusinessProfileData {
   category?: string;
   description?: string;
   address?: string;
+  pfpSvg?: string;
 }
 
 interface Props {
@@ -41,6 +43,7 @@ export default function BusinessProfileForm({ initial, onSave, submitLabel = 'sa
   const [category, setCategory] = useState(initial?.category ?? '');
   const [description, setDescription] = useState(initial?.description ?? '');
   const [address, setAddress] = useState(initial?.address ?? '');
+  const [pfpSvg, setPfpSvg] = useState(initial?.pfpSvg ?? '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -61,6 +64,7 @@ export default function BusinessProfileForm({ initial, onSave, submitLabel = 'sa
         category,
         description: description.trim(),
         address: address.trim() || undefined,
+        pfpSvg: pfpSvg || undefined,
       });
 
       haptic.success();
@@ -75,6 +79,13 @@ export default function BusinessProfileForm({ initial, onSave, submitLabel = 'sa
 
   return (
     <div className="space-y-6">
+      <PFPSelector
+        selected={pfpSvg}
+        onChange={setPfpSvg}
+        showInitials={true}
+        initials={name.slice(0, 2).toUpperCase() || 'BS'}
+      />
+
       <div>
         <label className="text-muted text-xs font-mono mb-2 block">business name</label>
         <input

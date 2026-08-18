@@ -165,6 +165,7 @@ export const saveCreatorProfile = mutation({
     contentCategories: v.array(v.string()),
     gigCharge: v.number(),
     portfolioUrl: v.optional(v.string()),
+    pfpSvg: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
@@ -179,6 +180,7 @@ export const saveCreatorProfile = mutation({
         contentCategories: args.contentCategories,
         gigCharge: args.gigCharge,
         portfolioUrl: args.portfolioUrl,
+        pfpSvg: args.pfpSvg,
         profileComplete: true,
         updatedAt: Date.now(),
       });
@@ -190,6 +192,7 @@ export const saveCreatorProfile = mutation({
         contentCategories: args.contentCategories,
         gigCharge: args.gigCharge,
         portfolioUrl: args.portfolioUrl,
+        pfpSvg: args.pfpSvg,
         profileComplete: true,
         updatedAt: Date.now(),
       });
@@ -206,6 +209,7 @@ export const saveBusinessProfile = mutation({
     category: v.string(),
     description: v.string(),
     address: v.optional(v.string()),
+    pfpSvg: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
@@ -219,6 +223,7 @@ export const saveBusinessProfile = mutation({
         category: args.category,
         description: args.description,
         address: args.address,
+        pfpSvg: args.pfpSvg,
         profileComplete: true,
         updatedAt: Date.now(),
       });
@@ -229,6 +234,7 @@ export const saveBusinessProfile = mutation({
         category: args.category,
         description: args.description,
         address: args.address,
+        pfpSvg: args.pfpSvg,
         profileComplete: true,
         updatedAt: Date.now(),
       });

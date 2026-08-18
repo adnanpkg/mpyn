@@ -7,6 +7,7 @@ import { CONTENT_CATEGORIES } from '@/lib/categories';
 import { getCurrentUser } from '@/lib/auth';
 import { convex } from '@/lib/convex';
 import { api } from '@/convex/_generated/api';
+import PFPSelector from '@/components/pfp-selector';
 
 export interface CreatorProfileData {
   instagramHandle?: string;
@@ -14,6 +15,7 @@ export interface CreatorProfileData {
   contentCategories?: string[];
   gigCharge?: number;
   portfolioUrl?: string;
+  pfpSvg?: string;
 }
 
 interface Props {
@@ -28,6 +30,7 @@ export default function CreatorProfileForm({ initial, onSave, submitLabel = 'sav
   const [categories, setCategories] = useState<string[]>(initial?.contentCategories ?? []);
   const [gigCharge, setGigCharge] = useState(String(initial?.gigCharge ?? ''));
   const [portfolioUrl, setPortfolioUrl] = useState(initial?.portfolioUrl ?? '');
+  const [pfpSvg, setPfpSvg] = useState(initial?.pfpSvg ?? '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -57,6 +60,7 @@ export default function CreatorProfileForm({ initial, onSave, submitLabel = 'sav
         contentCategories: categories,
         gigCharge: charge,
         portfolioUrl: portfolioUrl.trim() || undefined,
+        pfpSvg: pfpSvg || undefined,
       });
 
       haptic.success();
@@ -71,6 +75,13 @@ export default function CreatorProfileForm({ initial, onSave, submitLabel = 'sav
 
   return (
     <div className="space-y-6">
+      <PFPSelector
+        selected={pfpSvg}
+        onChange={setPfpSvg}
+        showInitials={true}
+        initials={instagram.slice(0, 2).toUpperCase() || 'CR'}
+      />
+
       <div>
         <label className="text-muted text-xs font-mono mb-2 block">instagram handle</label>
         <input
