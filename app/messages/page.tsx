@@ -58,7 +58,7 @@ export default function MessagesPage() {
     scrollToBottom();
   }, [messages]);
 
-  // Load user and conversations
+  // Load user and conversations with polling for updates
   useEffect(() => {
     const init = async () => {
       try {
@@ -69,15 +69,16 @@ export default function MessagesPage() {
         }
         setCurrentUser(u);
         
-        // Load conversations
+        // Load conversations once
         const convos = await convex.query(api.messages.getConversations, {
           userId: u._id,
         });
         setConversations(convos as Conversation[]);
+        
+        setLoading(false);
       } catch (err) {
         console.error('Failed to initialize:', err);
         setError(err instanceof Error ? err.message : 'Failed to load');
-      } finally {
         setLoading(false);
       }
     };
@@ -85,7 +86,25 @@ export default function MessagesPage() {
     init();
   }, [router]);
 
-  // Load thread when targetUserId changes
+  // Poll for conversation updates every 2 seconds
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const convos = await convex.query(api.messages.getConversations, {
+          userId: currentUser._id,
+        });
+        setConversations(convos as Conversation[]);
+      } catch (err) {
+        console.error('Failed to poll conversations:', err);
+      }
+    }, 2000);
+
+    return () => clearInterval(pollInterval);
+  }, [currentUser]);
+
+  // Load thread when targetUserId changes - WITH POLLING for real-time updates
   useEffect(() => {
     if (!targetUserId || !currentUser) return;
 
@@ -121,6 +140,11 @@ export default function MessagesPage() {
     };
 
     loadThread();
+
+    // Poll for new messages every 1 second
+    const pollInterval = setInterval(loadThread, 1000);
+
+    return () => clearInterval(pollInterval);
   }, [targetUserId, currentUser]);
 
   const sendMessage = async () => {
@@ -138,12 +162,7 @@ export default function MessagesPage() {
       haptic.success();
       setInput('');
       
-      // Reload messages
-      const thread = await convex.query(api.messages.getThread, {
-        userId: currentUser._id,
-        partnerId: targetUserId as Id<'users'>,
-      });
-      setMessages(thread as Message[]);
+      // No need to manually refetch - subscription will update automatically
     } catch (err) {
       console.error('Failed to send message:', err);
       haptic.error();
