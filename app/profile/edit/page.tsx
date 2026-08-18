@@ -12,6 +12,7 @@ import BusinessProfileForm from '@/components/business-profile-form';
 import { haptic, pressScale } from '@/lib/haptics';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default function EditProfilePage() {
   const router = useRouter();

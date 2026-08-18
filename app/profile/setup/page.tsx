@@ -7,6 +7,7 @@ import CreatorProfileForm from '@/components/creator-profile-form';
 import BusinessProfileForm from '@/components/business-profile-form';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default function ProfileSetupPage() {
   const router = useRouter();

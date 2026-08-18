@@ -13,6 +13,7 @@ import { api } from '@/convex/_generated/api';
 import { haptic, pressScale } from '@/lib/haptics';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 interface CreatorProfile {
   instagramHandle?: string;
