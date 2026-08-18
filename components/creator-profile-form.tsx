@@ -60,7 +60,7 @@ export default function CreatorProfileForm({ initial, onSave, submitLabel = 'sav
         contentCategories: categories,
         gigCharge: charge,
         portfolioUrl: portfolioUrl.trim() || undefined,
-        // pfpSvg: pfpSvg || undefined,
+        pfpSvg: pfpSvg || undefined,
       });
 
       haptic.success();
