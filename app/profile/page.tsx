@@ -12,6 +12,8 @@ import { convex } from '@/lib/convex';
 import { api } from '@/convex/_generated/api';
 import { haptic, pressScale } from '@/lib/haptics';
 
+export const dynamic = 'force-dynamic';
+
 interface CreatorProfile {
   instagramHandle?: string;
   bio?: string;

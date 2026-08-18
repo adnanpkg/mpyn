@@ -6,6 +6,8 @@ import { getCurrentUser, type User } from '@/lib/auth';
 import CreatorProfileForm from '@/components/creator-profile-form';
 import BusinessProfileForm from '@/components/business-profile-form';
 
+export const dynamic = 'force-dynamic';
+
 export default function ProfileSetupPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
