@@ -64,7 +64,7 @@ export default function BusinessProfileForm({ initial, onSave, submitLabel = 'sa
         category,
         description: description.trim(),
         address: address.trim() || undefined,
-        pfpSvg: pfpSvg || undefined,
+        // pfpSvg: pfpSvg || undefined,
       });
 
       haptic.success();
