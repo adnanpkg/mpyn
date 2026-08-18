@@ -158,7 +158,7 @@ export const getBusinessProfile = query({
 
 // Save / update creator profile
 export const saveCreatorProfile = mutation({
-  args: {
+  args: v.object({
     userId: v.id('users'),
     instagramHandle: v.string(),
     bio: v.string(),
@@ -166,7 +166,7 @@ export const saveCreatorProfile = mutation({
     gigCharge: v.float64(),
     portfolioUrl: v.optional(v.string()),
     pfpSvg: v.optional(v.string()),
-  },
+  }),
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query('creatorProfiles')
@@ -203,14 +203,14 @@ export const saveCreatorProfile = mutation({
 
 // Save / update business profile
 export const saveBusinessProfile = mutation({
-  args: {
+  args: v.object({
     userId: v.id('users'),
     name: v.string(),
     category: v.string(),
     description: v.string(),
     address: v.optional(v.string()),
     pfpSvg: v.optional(v.string()),
-  },
+  }),
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query('businessProfiles')
