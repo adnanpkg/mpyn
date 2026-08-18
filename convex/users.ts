@@ -163,7 +163,7 @@ export const saveCreatorProfile = mutation({
     instagramHandle: v.string(),
     bio: v.string(),
     contentCategories: v.array(v.string()),
-    gigCharge: v.number(),
+    gigCharge: v.float64(),
     portfolioUrl: v.optional(v.string()),
     pfpSvg: v.optional(v.string()),
   },
