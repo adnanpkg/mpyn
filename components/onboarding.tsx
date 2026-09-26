@@ -126,43 +126,35 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   // ── Handle GPS Location Confirmation ────────────────────
   const handleConfirmLocation = () => {
     if (!detectedLocation) return;
-
     haptic.tap();
-
-    // Try to match with our data
+    const fuzzy = (a: string, b: string) =>
+      a.toLowerCase().includes(b.toLowerCase()) || b.toLowerCase().includes(a.toLowerCase());
     const matchedCountry = worldCountries.find(
-      (c) => c.name.toLowerCase() === detectedLocation.country.toLowerCase()
+      (c) => c.name.toLowerCase() === detectedLocation.country.toLowerCase() || fuzzy(c.name, detectedLocation.country)
     );
-
-    if (matchedCountry) {
-      setSelectedCountry(matchedCountry.name);
-
-      // Try to match state
-      if (detectedLocation.state) {
-        const matchedState = matchedCountry.states.find(
-          (s) => s.name.toLowerCase() === detectedLocation.state.toLowerCase()
-        );
-        if (matchedState) {
-          setSelectedState(matchedState.name);
-
-          // Try to match city
-          if (detectedLocation.city) {
-            const matchedCity = matchedState.cities.find(
-              (c) => c.toLowerCase() === detectedLocation.city.toLowerCase()
-            );
-            if (matchedCity) {
-              setSelectedCity(matchedCity);
-            }
-          }
-        }
-      }
-
-      setDetectedLocation(null);
-      // Skip to role selection (step 4)
-      setDirection(1);
-      setSignupStep(4);
+    if (!matchedCountry) {
+      setError("could not match your country. please select manually.");
+      setDetectedLocation(null); setDirection(1); setSignupStep(1);
+      return;
+    }
+    setSelectedCountry(matchedCountry.name);
+    const matchedState = detectedLocation.state
+      ? matchedCountry.states.find((s) => s.name.toLowerCase() === detectedLocation.state.toLowerCase() || fuzzy(s.name, detectedLocation.state))
+      : null;
+    if (matchedState) {
+      setSelectedState(matchedState.name);
+      const rawCity = detectedLocation.city || "";
+      const matchedCity = rawCity
+        ? (matchedState.cities.find((c) => c.toLowerCase() === rawCity.toLowerCase() || fuzzy(c, rawCity)) || rawCity)
+        : "";
+      setSelectedCity(matchedCity);
+      setDetectedLocation(null); setDirection(1);
+      setSignupStep(matchedCity ? 4 : 3);
     } else {
-      setError(`country not found: ${detectedLocation.country}. please select manually.`);
+      if (detectedLocation.state) setSelectedState(detectedLocation.state);
+      if (detectedLocation.city)  setSelectedCity(detectedLocation.city);
+      setDetectedLocation(null); setDirection(1);
+      setSignupStep(detectedLocation.state && detectedLocation.city ? 4 : 2);
     }
   };
 
